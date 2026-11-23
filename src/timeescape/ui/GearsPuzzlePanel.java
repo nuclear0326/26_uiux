@@ -15,12 +15,12 @@ public final class GearsPuzzlePanel extends RepairPuzzlePanel {
         super(onSolved,onClose);
         JButton reset=new JButton("전체 부품 회수");reset.addActionListener(e->{if(isFinished())return;gears=new Gears();refreshPuzzle();});
         action.addActionListener(e->{if(!isFinished()&&gears.solved())solve();});
-        build("CLOCKWORK / 4 × 4 기어 복원","홈 크기에 맞게 배치 · 부품 선택 후 칸 클릭 또는 드래그 · 장착 부품 클릭으로 회수",board,reset);
+        build("시계태엽 복원","홈 크기에 맞게 배치 / 부품 선택 후 칸 클릭 또는 드래그 / 장착 부품 클릭으로 회수",board,reset);
         refreshPuzzle();
     }
     @Override protected void skipStage(){solve();}
     private void refreshPuzzle(){
-        status.setText("장착 "+gears.filled()+" / 16     남은 부품: 소 "+gears.stock[0]+" · 중 "+gears.stock[1]+" · 대 "+gears.stock[2]+"     홈과 부품의 크기를 맞추세요");action.setText("수리 완료");action.setEnabled(gears.solved());board.repaint();
+        status.setText("장착 "+gears.filled()+" / 16     남은 부품: 소 "+gears.stock[0]+" / 중 "+gears.stock[1]+" / 대 "+gears.stock[2]+"     홈과 부품의 크기를 맞추세요");action.setText("수리 완료");action.setEnabled(gears.solved());board.repaint();
     }
     private final class Board extends JPanel {
         private double scale=1;private int ox,oy;

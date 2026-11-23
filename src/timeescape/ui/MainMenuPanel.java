@@ -84,19 +84,20 @@ public final class MainMenuPanel extends JPanel {
         setPreferredSize(new Dimension(1280, 720));
         setBackground(new Color(35, 27, 21));
         setFocusable(true);
+        setCursor(GameCursors.normal());
 
         MouseAdapter mouse = new MouseAdapter() {
             @Override public void mouseMoved(MouseEvent e) {
                 int next = buttonAt(e.getPoint());
                 if (hovered != next) {
                     hovered = next;
-                    setCursor(Cursor.getPredefinedCursor(next >= 0 && !runningTransition()
-                        ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+                    setCursor(GameCursors.forInteraction(next >= 0 && !runningTransition()));
                     repaint();
                 }
             }
             @Override public void mouseExited(MouseEvent e) {
                 hovered = -1;
+                setCursor(GameCursors.normal());
                 repaint();
             }
             @Override public void mousePressed(MouseEvent e) {
@@ -229,7 +230,7 @@ public final class MainMenuPanel extends JPanel {
         }
         hovered = -1;
         pressed = -1;
-        setCursor(Cursor.getDefaultCursor());
+        setCursor(GameCursors.normal());
         GameAudio.get().play("ui_click");
         if (transitionAnimation && button == 0) {
             GameAudio.get().startMenuTransition();

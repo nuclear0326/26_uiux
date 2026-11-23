@@ -22,6 +22,6 @@ final class LabTheme {
             Graphics2D g=(Graphics2D)graphics.create();quality(g);g.setColor(getModel().isRollover()?new Color(67,64,48):PANEL);g.fillRoundRect(0,0,getWidth(),getHeight(),8,8);
             g.setColor(isFocusOwner()?TEXT:GOLD);g.drawRoundRect(1,1,getWidth()-3,getHeight()-3,8,8);g.setFont(GameFonts.button(16));center(g,getText(),getWidth()/2,(getHeight()-g.getFontMetrics().getHeight())/2+g.getFontMetrics().getAscent());g.dispose();
         }};
-        b.setPreferredSize(new Dimension(128,42));b.setOpaque(false);b.setContentAreaFilled(false);b.setBorderPainted(false);b.setFocusPainted(false);b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));return b;
+        b.setPreferredSize(new Dimension(128,42));b.setOpaque(false);b.setContentAreaFilled(false);b.setBorderPainted(false);b.setFocusPainted(false);b.setCursor(GameCursors.interact());return b;
     }
 }

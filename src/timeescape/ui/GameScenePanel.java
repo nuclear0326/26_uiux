@@ -79,6 +79,13 @@ public final class GameScenePanel extends JPanel {
     private boolean revealHeld;
     private double particlePhase;
     private float revealContrast;
+    private java.util.Map<String,timeescape.scene.InteractionHint> hints=java.util.Map.of();
+    public void setProgressHints(timeescape.core.GameState state){
+        var next=new java.util.HashMap<String,timeescape.scene.InteractionHint>();
+        for(Hotspot h:HotspotCatalog.of(state.era()))next.put(h.id(),timeescape.scene.InteractionHint.of(state,h.id()));
+        if(!next.equals(hints)){hints=java.util.Map.copyOf(next);contrastMask=null;repaint();}
+    }
+    private timeescape.scene.InteractionHint hint(Hotspot h){return hints.getOrDefault(h.id(),timeescape.scene.InteractionHint.READY);}
     private BufferedImage contrastMask;
     private Era contrastMaskEra;
     private void paintContrast(Graphics2D g) {
@@ -93,6 +100,7 @@ public final class GameScenePanel extends JPanel {
             m.setColor(Color.WHITE);
             // Gentle feather outside each object; the core retains its actual lighting.
             for (Hotspot h : HotspotCatalog.of(era)) {
+                if(hint(h)==timeescape.scene.InteractionHint.NONE)continue;
                 for (int width=52;width>=2;width-=2) {
                     m.setComposite(java.awt.AlphaComposite.DstOut.derive(.10f));
                     m.setStroke(new BasicStroke(width,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
@@ -118,7 +126,7 @@ public final class GameScenePanel extends JPanel {
         fadingZone = null;
         glow = 0f;
         hoverTimer.stop();
-        setCursor(Cursor.getDefaultCursor());
+        setCursor(GameCursors.normal());
         repaint();
     }
 
@@ -143,6 +151,7 @@ public final class GameScenePanel extends JPanel {
         setBackground(new Color(8, 11, 16));
         setPreferredSize(new Dimension(1120, 700));
         setFocusable(true);
+        setCursor(GameCursors.normal());
 
         hoverTimer = new Timer(40, e -> {
             particlePhase += .045;
@@ -170,7 +179,7 @@ public final class GameScenePanel extends JPanel {
                         fadingZone = next;
                         if (glow <= .025f) glow = 0f;
                     }
-                    setCursor(Cursor.getPredefinedCursor(next == null ? Cursor.DEFAULT_CURSOR : Cursor.HAND_CURSOR));
+                    setCursor(GameCursors.forInteraction(next != null));
                     hoverTimer.start();
                     repaint();
                 }
@@ -183,7 +192,7 @@ public final class GameScenePanel extends JPanel {
             }
             @Override public void mouseExited(MouseEvent e) {
                 hovered = null;
-                setCursor(Cursor.getDefaultCursor());
+                setCursor(GameCursors.normal());
                 hoverTimer.start();
             }
         };
@@ -221,7 +230,7 @@ public final class GameScenePanel extends JPanel {
             fadingZone = null;
             glow = 0f;
             hoverTimer.stop();
-            setCursor(Cursor.getDefaultCursor());
+            setCursor(GameCursors.normal());
         }
         repaint();
     }
@@ -321,8 +330,8 @@ public final class GameScenePanel extends JPanel {
         overlay.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         paintContrast(overlay);
         if (revealContrast > 0) {
-            for (Hotspot zone : HotspotCatalog.of(era)) paintParticles(overlay, zone, revealContrast);
-        } else if (fadingZone != null && glow > 0f) {
+            for (Hotspot zone : HotspotCatalog.of(era)) if(hint(zone)==timeescape.scene.InteractionHint.READY) paintParticles(overlay, zone, revealContrast);
+        } else if (fadingZone != null && glow > 0f && hint(fadingZone)==timeescape.scene.InteractionHint.READY) {
             paintParticles(overlay, fadingZone, glow * .65f);
         }
         overlay.dispose();

@@ -21,8 +21,8 @@ public final class RepairPuzzleDialog extends JDialog {
     }
     private RepairPuzzleDialog(Frame owner,String title,PanelFactory factory){
         super(owner,title,true);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);setSize(1000,820);setMinimumSize(new Dimension(900,760));setLocationRelativeTo(owner);
-        content=factory.create(this::finish,this::dispose);setContentPane(content);
+        setCursor(GameCursors.normal());setUndecorated(true);setDefaultCloseOperation(DISPOSE_ON_CLOSE);setSize(1000,820);setMinimumSize(new Dimension(900,760));setLocationRelativeTo(owner);
+        content=factory.create(this::finish,this::dispose);setContentPane(content);PuzzleChrome.bindClose(getRootPane(),this::dispose);
         DeveloperMode.bind(getRootPane(),content::developerSkip);
         if(DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Ctrl+Shift+F10 단계 스킵]");
         GameAudio.get().puzzle(true);

@@ -11,11 +11,8 @@ public final class PresentPuzzlePanel extends JPanel {
     private final JPanel instruments=new JPanel();
     public PresentPuzzlePanel(String id,Runnable onSolved,Runnable onClose){
         super(new BorderLayout(0,18));puzzle=PresentPuzzles.create(id);
-        setBackground(LabTheme.BACK);setBorder(BorderFactory.createEmptyBorder(24,30,24,30));
-        JPanel header=new JPanel(new BorderLayout(0,8));header.setOpaque(false);
-        JLabel serial=new JLabel("TIME ESCAPE  /  "+serial(id));serial.setForeground(LabTheme.GOLD);serial.setFont(GameFonts.body(13));header.add(serial,BorderLayout.NORTH);
-        JLabel title=new JLabel(puzzle.title());title.setForeground(LabTheme.TEXT);title.setFont(GameFonts.title(27));header.add(title,BorderLayout.CENTER);
-        JTextArea instructions=new JTextArea(puzzle.instruction());instructions.setForeground(LabTheme.MUTED);instructions.setOpaque(false);instructions.setEditable(false);instructions.setFocusable(false);instructions.setLineWrap(true);instructions.setWrapStyleWord(true);instructions.setFont(GameFonts.body(15));instructions.setRows(3);header.add(instructions,BorderLayout.SOUTH);add(header,BorderLayout.NORTH);
+        PuzzleChrome.decorate(this);
+        add(PuzzleChrome.header(puzzle.title(),"현재 / 연구실",puzzle.instruction(),onClose),BorderLayout.NORTH);
         instruments.setOpaque(false);instruments.setLayout(id.equals("PZ008")?new GridLayout(2,2,14,14):new GridLayout(1,puzzle.size(),12,12));add(instruments,BorderLayout.CENTER);
         JPanel bottom=new JPanel(new BorderLayout(8,12));bottom.setOpaque(false);status.setFont(GameFonts.body(15));status.setForeground(LabTheme.GREEN);bottom.add(status,BorderLayout.NORTH);
         JPanel actions=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));actions.setOpaque(false);
@@ -26,10 +23,10 @@ public final class PresentPuzzlePanel extends JPanel {
         for(int i=0;i<puzzle.size();i++)instruments.add(new Instrument(i));refresh();
     }
     private static String serial(String id){return switch(id){case "PZ004"->"POWER DISTRIBUTION";case "PZ006"->"RESEARCH ARCHIVE";case "PZ008"->"DEVICE SCHEMATIC";case "PZ010"->"MODULE ASSEMBLY";default->"TEMPORAL ALIGNMENT";};}
-    private void refresh(){status.setForeground(LabTheme.GREEN);status.setText(puzzle.status());for(Component c:instruments.getComponents()){Instrument b=(Instrument)c;b.getAccessibleContext().setAccessibleName(puzzle.label(b.index));b.setToolTipText(puzzle.label(b.index));}instruments.repaint();}
+    private void refresh(){status.setForeground(LabTheme.GREEN);status.setText(PuzzleChrome.text(puzzle.status()));for(Component c:instruments.getComponents()){Instrument b=(Instrument)c;b.getAccessibleContext().setAccessibleName(puzzle.label(b.index));b.setToolTipText(puzzle.label(b.index));}instruments.repaint();}
     private final class Instrument extends JButton {
         final int index;
-        Instrument(int index){this.index=index;setOpaque(false);setContentAreaFilled(false);setBorderPainted(false);setFocusPainted(false);setRolloverEnabled(true);setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));addActionListener(e->{puzzle.turn(index);refresh();});}
+        Instrument(int index){this.index=index;setOpaque(false);setContentAreaFilled(false);setBorderPainted(false);setFocusPainted(false);setRolloverEnabled(true);setCursor(GameCursors.interact());addActionListener(e->{puzzle.turn(index);refresh();});}
         @Override protected void paintComponent(Graphics graphics){
             Graphics2D g=(Graphics2D)graphics.create();LabTheme.quality(g);int w=getWidth(),h=getHeight();
             g.setPaint(new GradientPaint(0,0,new Color(43,51,50),w,h,LabTheme.PANEL));g.fillRoundRect(1,1,w-2,h-2,14,14);

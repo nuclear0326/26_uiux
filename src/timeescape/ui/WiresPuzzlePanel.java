@@ -16,14 +16,14 @@ public final class WiresPuzzlePanel extends RepairPuzzlePanel {
         JButton clear=new JButton("선 지우기");clear.addActionListener(e->{if(!isFinished()&&active>=0){wires.begin(active);refreshPuzzle();}});
         JButton undo=new JButton("한 칸 취소");undo.addActionListener(e->{if(!isFinished()&&active>=0){wires.undo(active);refreshPuzzle();}});
         action.addActionListener(e->{if(!isFinished()&&wires.solved()){if(wires.hard)solve();else nextStage();}});
-        build("CIRCUIT / 구형 장치 배선 복구","왼쪽 단자를 클릭한 뒤 드래그 또는 인접 칸 클릭 · 기존 선 클릭으로 재선택 · 끝점부터 이어 그리기",board,reset,clear,undo);
+        build("배선 복구","왼쪽 단자를 클릭한 뒤 드래그 또는 인접 칸 클릭 / 기존 선 클릭으로 재선택 / 끝점부터 이어 그리기",board,reset,clear,undo);
         refreshPuzzle();
     }
     private void nextStage(){wires=new Wires(true);active=-1;refreshPuzzle();}
     @Override protected void skipStage(){if(wires.hard)solve();else nextStage();}
     private void refreshPuzzle(){
         int count=0;for(int i=0;i<wires.rows.length;i++)if(wires.connected(i))count++;
-        status.setText((wires.hard?"뒷면 · 어려움":"앞면 · 쉬움")+"     연결 "+count+" / "+wires.rows.length+"     통로 "+wires.coveredCells()+" / "+wires.totalCells()+"     모든 통로를 채우세요.");action.setText(wires.hard?"수리 완료":"구 뒤집기 → 어려움");action.setEnabled(wires.solved());board.repaint();
+        status.setText((wires.hard?"뒷면 / 어려움":"앞면 / 쉬움")+"     연결 "+count+" / "+wires.rows.length+"     통로 "+wires.coveredCells()+" / "+wires.totalCells()+"     모든 통로를 채우세요.");action.setText(wires.hard?"수리 완료":"구 뒤집기 → 어려움");action.setEnabled(wires.solved());board.repaint();
     }
     private final class Board extends JPanel {
         private double scale=1;private int ox,oy;

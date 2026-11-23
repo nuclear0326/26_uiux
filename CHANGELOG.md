@@ -1,3 +1,7 @@
+# v62
+- Derive Shift spotlight/particle hints from current interaction progress.
+- Invalidate masks after completion, pickup and restore; preserve fade and save format.
+
 # v61
 - Split five present puzzle models behind PresentPuzzle and PresentPuzzles registry.
 - Share cyclic controls and target comparison; preserve rules, artwork and stable IDs.

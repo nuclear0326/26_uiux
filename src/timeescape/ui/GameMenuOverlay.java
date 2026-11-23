@@ -81,7 +81,7 @@ final class GameMenuOverlay extends JPanel {
             }
             g.dispose();
         }
-    };b.setName(name);b.setOpaque(false);b.setBorderPainted(false);b.setContentAreaFilled(false);b.setFocusPainted(false);b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));b.setFont(GameFonts.button(30));return b;}
+    };b.setName(name);b.setOpaque(false);b.setBorderPainted(false);b.setContentAreaFilled(false);b.setFocusPainted(false);b.setCursor(GameCursors.interact());b.setFont(GameFonts.button(30));return b;}
     private void option(String label,String name,Runnable action){JButton b=link(label,name);
         if(label.equals("돌아가기")){b.setText("");b.putClientProperty("backArrow",true);b.setToolTipText("돌아가기 (Esc)");b.getAccessibleContext().setAccessibleName("돌아가기");}b.addActionListener(e->{if(!busy)action.run();});options.add(b);add(b);}
     void showPage(String next){if(busy)return;long revision=++pageRevision;page=next;newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();

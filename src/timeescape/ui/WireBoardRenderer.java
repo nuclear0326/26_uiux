@@ -12,8 +12,8 @@ public final class WireBoardRenderer {
             if(active>=0&&!wires.paths.get(active).isEmpty()){
                 var path=wires.paths.get(active);Point tip=path.get(path.size()-1);
                 g.setColor(Color.WHITE);g.setStroke(new BasicStroke(2));g.drawOval(190+tip.x*24-10,30+tip.y*24-10,20,20);
-                g.setColor(COLORS[active]);g.setFont(GameFonts.body(16));g.drawString("선택: "+(active+1)+"번 · 흰 원에서 이어 그리기",690,355);
+                g.setColor(COLORS[active]);g.setFont(GameFonts.body(16));g.drawString("선택: "+(active+1)+"번 / 흰 원에서 이어 그리기",690,355);
             }
-            g.setColor(Color.WHITE);g.setFont(GameFonts.title(18));g.drawString(wires.hard?"BACK / 02":"FRONT / 01",710,115);g.setFont(GameFonts.body(14));g.drawString("회색 블록 = 장애물",710,155);g.drawString("기존 선 클릭: 선택 / 유지",710,185);g.drawString("직전 칸으로 이동: 되돌리기",710,215);g.drawString("모든 통로 칸을 채워야 완료",710,245);g.drawString("통로 "+wires.coveredCells()+" / "+wires.totalCells(),710,280);g.drawString("회로별로 한 줄 · 교차 금지",710,315);
+            g.setColor(Color.WHITE);g.setFont(GameFonts.title(18));g.drawString(wires.hard?"BACK / 02":"FRONT / 01",710,115);g.setFont(GameFonts.body(14));g.drawString("회색 블록 = 장애물",710,155);g.drawString("기존 선 클릭: 선택 / 유지",710,185);g.drawString("직전 칸으로 이동: 되돌리기",710,215);g.drawString("모든 통로 칸을 채워야 완료",710,245);g.drawString("통로 "+wires.coveredCells()+" / "+wires.totalCells(),710,280);g.drawString("회로별로 한 줄 / 교차 금지",710,315);
         }
 }

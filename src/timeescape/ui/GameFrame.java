@@ -49,6 +49,7 @@ public final class GameFrame extends JFrame {
 
     public GameFrame() {
         super("TIME ESCAPE");
+        setCursor(GameCursors.normal());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(1020, 650));
         setSize(1500, 880);
@@ -199,6 +200,7 @@ public final class GameFrame extends JFrame {
     private void refresh() {
         Era era = state.era();
         scene.setEra(era);
+        scene.setProgressHints(state);
         scene.setPowered(state.powered());
         missions.refresh(state);
         hud.setLocation(state.era().title(), state.locationTitle().replaceFirst("^.*? · ", ""));

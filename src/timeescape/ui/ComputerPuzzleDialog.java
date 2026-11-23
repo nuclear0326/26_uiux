@@ -67,7 +67,7 @@ public final class ComputerPuzzleDialog extends JDialog {
 
     private ComputerPuzzleDialog(Frame owner) {
         super(owner, "진단 컴퓨터 | 데이터 추출 터미널", true);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setUndecorated(true);setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(975, 728);
         setMinimumSize(new Dimension(905, 660));
         setLocationRelativeTo(owner);
@@ -119,21 +119,12 @@ public final class ComputerPuzzleDialog extends JDialog {
 
     private void initUI() {
         JPanel root = new JPanel(new BorderLayout(14, 14));
-        root.setBackground(BACK);
-        root.setBorder(BorderFactory.createEmptyBorder(18, 22, 16, 22));
+        PuzzleChrome.decorate(root);
         setContentPane(root);
 
-        JPanel header = new JPanel(new BorderLayout(0, 5));
-        header.setOpaque(false);
-        JPanel h1 = new JPanel(new BorderLayout());
-        h1.setOpaque(false);
-        h1.add(label("DATA RECOVERY   /   FILE EXPORT", 20, CYAN, true), BorderLayout.WEST);
-        moves.setFont(GameFonts.body(15));
-        moves.setForeground(new Color(232, 186, 107));
-        h1.add(moves, BorderLayout.EAST);
-        header.add(h1, BorderLayout.NORTH);
-        header.add(label("[실험 기록 03] 압축 데이터의 전송 경로가 잠겼습니다. 다른 파일을 정렬해 경로를 확보하세요.", 13, MUTED, false), BorderLayout.SOUTH);
-        root.add(header, BorderLayout.NORTH);
+        root.add(PuzzleChrome.header("파일 옮기기","현재 / 연구실","파일 블록을 밀어 SYS.CFG를 오른쪽 전송 포트로 내보내세요.",this::dispose),BorderLayout.NORTH);
+        moves.setFont(GameFonts.body(15));moves.setForeground(LabTheme.GOLD);
+        PuzzleChrome.bindClose(getRootPane(),this::dispose);
 
         JPanel center = new JPanel(new BorderLayout(15, 0));
         center.setOpaque(false);
@@ -148,7 +139,7 @@ public final class ComputerPuzzleDialog extends JDialog {
         side.setLayout(new BoxLayout(side, BoxLayout.Y_AXIS));
         JLabel intro = label("TRANSFER MANAGER", 16, CYAN, true);
         intro.setAlignmentX(LEFT_ALIGNMENT);
-        side.add(intro);
+        side.add(moves);side.add(Box.createVerticalStrut(10));side.add(intro);
         side.add(Box.createVerticalStrut(12));
         JTextArea info = new JTextArea("[목표] 황금색 SYS.CFG 파일을 오른쪽 PORT로 전송합니다.\n\n파일 블록은 정해진 방향으로만 움직이고, 다른 파일을 통과할 수 없습니다.");
         info.setOpaque(false);
