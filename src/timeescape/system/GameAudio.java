@@ -10,7 +10,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineEvent;
-import javax.swing.Timer;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.util.function.Function;
 import timeescape.model.Era;
 
 /**
@@ -28,7 +30,15 @@ public final class GameAudio {
     private static final float SFX_VOLUME = .60f;
 
     private final List<Track> tracks = new ArrayList<>();
-    private final Timer fade;
+    private final ScheduledThreadPoolExecutor audio;
+    private final Function<String, Clip> clipFactory;
+    private final AtomicBoolean closed = new AtomicBoolean();
+    private final AtomicLong transitionGeneration = new AtomicLong();
+    private volatile double transitionSeconds = -1;
+    private boolean transitionActive;
+    private boolean fading;
+    private long clockRestoreAt;
+    private final boolean disabled;
     private String currentScene = "";
     private Clip terminal;
     private Clip menuThunder;
@@ -36,16 +46,62 @@ public final class GameAudio {
     private final java.util.concurrent.CopyOnWriteArrayList<Clip> effects = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final java.util.Map<String, Long> lastEffects = new java.util.HashMap<>();
     private boolean clockSpinning;
-    private final Timer clockRestore = new Timer(1900, e -> {
-        clockSpinning = false;
-        refreshTrackGains();
-    });
     private boolean inPuzzle;
     private boolean muted;
 
     private GameAudio() {
-        fade = new Timer(45, e -> animate());
-        clockRestore.setRepeats(false);
+        this(null, java.awt.GraphicsEnvironment.isHeadless());
+    }
+
+    // Package-private injection keeps verification entirely silent, with no audio device access.
+    GameAudio(Function<String, Clip> factory, boolean disabled) {
+        this.disabled = disabled;
+        clipFactory = factory == null ? this::readClip : factory;
+        audio = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread t = new Thread(r, "time-escape-audio"); t.setDaemon(true); return t;
+        });
+        audio.setRemoveOnCancelPolicy(true);
+        audio.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        audio.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        if (!disabled) {
+            audio.scheduleWithFixedDelay(() -> safely(this::pollClock), 0, 10, TimeUnit.MILLISECONDS);
+            audio.scheduleWithFixedDelay(() -> { if(fading) safely(this::animate); }, 45, 45, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void safely(Runnable action) {
+        try { action.run(); } catch (RuntimeException e) {
+            System.err.println("Audio command failed: " + e.getClass().getSimpleName());
+        }
+    }
+    private void enqueue(Runnable action) {
+        if (closed.get() || disabled) return;
+        try { audio.execute(() -> { if(!closed.get()) safely(action); }); }
+        catch (RejectedExecutionException ignored) { }
+    }
+    private Clip openClip(String path) {
+        if(closed.get() || disabled) return null;
+        Clip c;
+        try { c = clipFactory.apply(path); }
+        catch (RuntimeException e) {
+            System.err.println("Audio preparation failed: " + e.getClass().getSimpleName());
+            return null;
+        }
+        if(closed.get() && c != null) { c.close(); return null; }
+        return c;
+    }
+    private void pollClock() {
+        if(clockSpinning && System.nanoTime() >= clockRestoreAt) {
+            clockSpinning=false; refreshTrackGains();
+        }
+        if(!transitionActive) return;
+        Clip c=menuStart;
+        double seconds=-1;
+        try {
+            if(c!=null && c.isOpen() && (c.isRunning() || c.getFramePosition()>=c.getFrameLength()))
+                seconds=c.getMicrosecondPosition()/1_000_000.0;
+        } catch(RuntimeException ignored) { /* Device loss falls back to the UI timeline. */ }
+        transitionSeconds=seconds;
     }
 
     private static final class Track {
@@ -56,7 +112,7 @@ public final class GameAudio {
         Track(Clip clip, float target, boolean clock) { this.clip = clip; this.target = target; this.clock = clock; }
     }
 
-    private Clip openClip(String path) {
+    private Clip readClip(String path) {
         try (InputStream raw = getClass().getResourceAsStream(ROOT + path)) {
             if (raw == null) {
                 System.err.println("Audio resource missing: " + path);
@@ -115,7 +171,7 @@ public final class GameAudio {
                 t.clip.stop(); t.clip.close(); it.remove();
             } else if (t.gain != t.target) moving = true;
         }
-        if (!moving) fade.stop();
+        if (!moving) fading = false;
     }
 
     private void changeScene(String scene, String bgm, String ambience) {
@@ -126,16 +182,18 @@ public final class GameAudio {
         loop("bgm/" + bgm + ".wav", BGM_VOLUME);
         if (ambience != null) loop("ambience/" + ambience + ".wav", AMBIENCE_VOLUME);
         if ("MENU".equals(scene)) loop("ambience/rain.wav", .18f);
-        fade.start();
+        fading = true;
     }
 
-    public void menu() {
+    public void menu() { enqueue(() -> {
+        // Prime timing-critical sounds before playback; subsequent triggers perform no file IO.
+        if(menuStart==null || !menuStart.isOpen()) menuStart=openClip("sfx/menu_start.wav");
+        if(menuThunder==null || !menuThunder.isOpen()) menuThunder=openClip("sfx/menu_thunder.wav");
         changeScene("MENU", "menu", null);
-        if (!java.awt.GraphicsEnvironment.isHeadless() && (menuThunder==null || !menuThunder.isOpen()))
-            menuThunder=openClip("sfx/menu_thunder.wav");
-    }
+    }); }
 
-    public void era(Era era) {
+    public void era(Era era) { enqueue(() -> changeEra(era)); }
+    private void changeEra(Era era) {
         switch (era) {
             case PRESENT -> changeScene("PRESENT", "present", "rain");
             case PAST -> changeScene("PAST", "past", null);
@@ -143,7 +201,8 @@ public final class GameAudio {
         }
     }
 
-    public void puzzle(boolean opening) {
+    public void puzzle(boolean opening) { enqueue(() -> changePuzzle(opening)); }
+    private void changePuzzle(boolean opening) {
         if (inPuzzle == opening) return;
         inPuzzle = opening;
         if (opening) {
@@ -158,29 +217,31 @@ public final class GameAudio {
         for (Track t : tracks) setGain(t.clip, trackVolume(t));
     }
 
-    /** One continuous soundtrack is the master clock for the start visuals. */
+    /** -2 means waiting for audio preparation: the UI remains responsive but holds the intro at zero. */
     public void startMenuTransition() {
-        stopMenuTransition();
-        if (java.awt.GraphicsEnvironment.isHeadless()) return;
-        menuStart = openClip("sfx/menu_start.wav");
-        if (menuStart == null) return;
-        try { setGain(menuStart, 1f); menuStart.start(); }
-        catch (RuntimeException ex) { stopMenuTransition(); }
+        long generation=transitionGeneration.incrementAndGet();
+        if(disabled || closed.get()) { transitionSeconds=-1; return; }
+        transitionSeconds=-2;
+        enqueue(() -> {
+            if(generation!=transitionGeneration.get()) return;
+            transitionActive=false;
+            if(menuStart==null || !menuStart.isOpen()) menuStart=openClip("sfx/menu_start.wav");
+            if(generation!=transitionGeneration.get() || closed.get()) return;
+            if(menuStart==null) { transitionSeconds=-1; return; }
+            try {
+                menuStart.stop(); menuStart.setFramePosition(0); setGain(menuStart,1f);
+                menuStart.start(); transitionSeconds=0; transitionActive=true;
+            } catch(RuntimeException e) { transitionSeconds=-1; transitionActive=false; }
+        });
     }
-
-    public double menuTransitionSeconds() {
-        if (menuStart == null || !menuStart.isOpen()) return -1;
-        // If an audio device stops unexpectedly, let the UI clock finish safely.
-        if (!menuStart.isRunning() && menuStart.getFramePosition() < menuStart.getFrameLength()) return -1;
-        return menuStart.getMicrosecondPosition() / 1_000_000.0;
-    }
-
+    public double menuTransitionSeconds() { return transitionSeconds; }
     public void stopMenuTransition() {
-        if (menuStart != null) { menuStart.stop(); menuStart.close(); menuStart = null; }
+        transitionGeneration.incrementAndGet(); transitionSeconds=-1;
+        enqueue(() -> { transitionActive=false; if(menuStart!=null) { menuStart.stop(); menuStart.setFramePosition(0); } });
     }
 
-    public void play(String effect) {
-        if (java.awt.GraphicsEnvironment.isHeadless()) return;
+    public void play(String effect) { enqueue(() -> playEffect(effect)); }
+    private void playEffect(String effect) {
         if ("menu_thunder".equals(effect) && menuThunder!=null && menuThunder.isOpen()) {
             try { menuThunder.stop(); menuThunder.setFramePosition(0); setGain(menuThunder,SFX_VOLUME); menuThunder.start(); }
             catch(RuntimeException ex) { menuThunder.close(); menuThunder=null; }
@@ -201,23 +262,29 @@ public final class GameAudio {
         if ("clock_spin".equals(effect)) {
             clockSpinning = true;
             refreshTrackGains();
-            clockRestore.restart();
+            clockRestoreAt = System.nanoTime() + 1_900_000_000L;
         }
         setGain(c, SFX_VOLUME);
         c.addLineListener(event -> {
             if (event.getType() == LineEvent.Type.STOP) {
-                effects.remove(c);
-                c.close();
+                enqueue(() -> { effects.remove(c); c.close(); });
             }
         });
         try { c.start(); } catch (RuntimeException ex) { effects.remove(c); c.close(); }
     }
 
     public void shutdown() {
+        if(!closed.compareAndSet(false,true)) return;
+        transitionGeneration.incrementAndGet(); transitionSeconds=-1;
+        audio.execute(() -> safely(this::closeAll));
+        audio.shutdown();
+    }
+    private void closeAll() {
         if(menuThunder!=null){menuThunder.stop();menuThunder.close();menuThunder=null;}
-        stopMenuTransition();
-        fade.stop();
-        clockRestore.stop();
+        transitionActive=false;
+        if(menuStart!=null){menuStart.stop();menuStart.close();menuStart=null;}
+        fading = false;
+        clockRestoreAt=0;
         clockSpinning = false;
         inPuzzle = false;
         for (Clip effect : effects) { effect.stop(); effect.close(); }

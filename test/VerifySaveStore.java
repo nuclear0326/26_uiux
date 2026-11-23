@@ -43,7 +43,7 @@ public class VerifySaveStore {
             }
             return;
         }
-        Path root=Files.createTempDirectory(Path.of("outputs/v45-release-tests"),"save-tests-");
+        Path root=Files.createTempDirectory(Path.of("outputs/v54-release-tests"),"save-tests-");
         Path path=root.resolve("roundtrip");SaveStore disk=store(path);
         check(disk.load().isEmpty()&&!Files.exists(path),"missing save does not create an empty run");
         GameState s=checkpoint(new GameState(),path);

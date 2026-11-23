@@ -1,8 +1,21 @@
-# v45 validation
-- JDK 21 build successful; no game Main, JFrame or EXE launched.
-- 45 save checks: milestone round-trips, reward/consumption retention, room and environment state, damage/backup recovery, missing primary, reset backup, write failures, checksum/version rejection, lighting restore, new-game confirmation.
-- Separate headless JVM processes write, exit, reload, continue through future and ending. Only test folders under outputs/v45-release-tests were used.
-- Regression: 51 progression, 15 Rush Hour completion, 44 mission/puzzle, 48 notebook, 34 game-menu checks. Total 237 passed.
-- Runtime save/continue integration was reviewed statically; no live window interaction was performed.
-- Windows bundle reuses the prior Java launcher/runtime with the v45 JAR and configuration. No launcher was executed.
-- Asset hashes unchanged; game-menu/research-note PNGs match v44 byte-for-byte. Packaged JAR matches build; launcher header/runtime/config and both ZIPs verified.
+# v57 오디오 초기화 최적화 검증
+
+## 변경
+- 파일 읽기, 오디오 장치 열기, 재생/정지/닫기, 볼륨 처리와 페이드를 단일 time-escape-audio 스레드에서 직렬 처리합니다. Swing 호출은 작업을 등록하고 즉시 반환합니다.
+- 시작 연출과 천둥 Clip을 메뉴 초기화 때 미리 준비하고 재사용합니다. 음원 데이터, 볼륨 상수, 45ms 페이드 간격과 0.25 보간 계수를 유지합니다.
+- 시작 연출은 준비 중 상태(-2)일 때 시간 진행을 보류하며 UI는 응답합니다. 준비 후 오디오 재생 위치를 10ms 간격으로 게시하여 기존 소등·균열 타임라인이 이를 따릅니다. 준비 실패/장치 위치 조회 실패 시 기존 UI 시간 진행으로 완료합니다.
+- 준비 중 취소를 세대 번호로 무효화하며, 종료 중 뒤늦게 준비된 Clip은 재생하지 않고 닫습니다.
+- v56 빗방울·번개 사전 생성 최적화 유지.
+
+## 검증
+- JDK 21 빌드 및 빗방울 데이터 round-trip 검증 성공.
+- 가짜 Clip/로더로 오디오 검증 26개 통과: 로딩 중 EDT 응답, 취소 후 늦은 재생 방지, 사전 준비 재사용, 오디오 시계, 장치 오류 fallback, 장면·퍼즐 순서, 효과음 중복 제한, 종료 자원 정리.
+- 로더를 latch로 멈춘 동안 EDT 확인 이벤트 약 0.448ms에 응답. 실제 사운드 장치 성능 측정값은 아닙니다.
+- 실제 MainMenuPanel 헤드리스 통합 검증 3개: 준비 중 연출 보류, 오디오 위치 추종, 장치 실패 fallback.
+- 기존 새 게임 확인/취소/시작/배치 검증 30개 통과. 합계 59개.
+- v56 대비 모든 오디오 파일 바이트 동일. MenuStartTimeline 및 MenuAtmosphere 동일. 비·번개·소등·균열을 포함한 11프레임 RGBA 해시 동일.
+- 참고용 1회 UI 초기화 probe: 864.56ms. 실제 EXE 시작 시간 또는 오디오 초기화 시간 측정이 아닙니다.
+
+게임 Main/JFrame/EXE, 실제 오디오 장치와 소리 재생은 실행하지 않았습니다. 실제 장치에서의 청감과 장치별 지연 검증은 수행하지 않았습니다. 음원 준비가 늦으면 시작 연출 전 대기가 생길 수 있으나 그 동안 화면 처리 스레드는 막지 않습니다. 오디오 준비 총량 자체를 줄이는 변경이 아니라 UI 대기를 분리하는 변경입니다.
+
+런처/runtime은 v56 배포본을 재사용하고 v57 JAR/설정을 교체합니다. 저장파일 형식/위치는 유지됩니다.

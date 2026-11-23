@@ -44,7 +44,7 @@ public class VerifyMissions {
                 for(int i=0;i<states.length;i++){
                     MissionPanel panel=new MissionPanel();panel.setSize(330,330);panel.refresh(states[i]);panel.doLayout();
                     BufferedImage image=new BufferedImage(330,330,BufferedImage.TYPE_INT_RGB);
-                    var g=image.createGraphics();panel.paint(g);g.dispose();ImageIO.write(image,"png",new File("outputs/v45-release-tests/mission-"+i+".png"));
+                    var g=image.createGraphics();panel.paint(g);g.dispose();ImageIO.write(image,"png",new File("outputs/v54-release-tests/mission-"+i+".png"));
                 }
             }catch(Exception e){throw new RuntimeException(e);}
         });

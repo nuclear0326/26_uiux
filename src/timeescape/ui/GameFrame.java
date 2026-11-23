@@ -27,8 +27,10 @@ public final class GameFrame extends JFrame {
     private final JPanel gameRoot = new JPanel(new BorderLayout());
     private MainMenuPanel mainMenu;
     private boolean gameStarted;
-    private final timeescape.system.SaveStore saves = new timeescape.system.SaveStore(
+    private final timeescape.system.SaveSlots saveSlots = new timeescape.system.SaveSlots(
         timeescape.system.SaveStore.defaultDirectory(), timeescape.core.ProgressCatalog.standard());
+    private final timeescape.system.SaveStore saves = saveSlots.store(timeescape.system.SaveSlots.Slot.AUTO);
+    private GameMenuOverlay continueSlots;
     private GameState.Snapshot lastSaved;
     private boolean replaceSave;
     private GameState state = new GameState();
@@ -49,7 +51,6 @@ public final class GameFrame extends JFrame {
         setLocationRelativeTo(null);
         initUI();
         initMainMenu();
-        loadProgress();
         setContentPane(cards);
         cardLayout.show(cards, MENU);
         refresh();
@@ -67,25 +68,53 @@ public final class GameFrame extends JFrame {
         super.dispose();
     }
 
-    private void loadProgress() {
+    private void showContinueSlots() {
+        if (!saveProgress()) return;
+        scene.setInputBlocked(true);
+        continueSlots.open("load");
+    }
+
+    private void closeContinueSlots() {
+        continueSlots.release();
+        scene.setInputBlocked(false);
+        if (mainMenu.isShowing()) mainMenu.requestFocusInWindow(); else scene.requestFocusInWindow();
+    }
+
+    private boolean loadSlot(timeescape.system.SaveSlots.Slot slot) {
         try {
-            var loaded = saves.load();
-            if (loaded.isPresent()) {
-                var result = loaded.get();
-                state = result.state();
-                gameStarted = true;
-                lastSaved = result.recoveredFromBackup() ? null : state.snapshot();
-                scene.setEra(state.era());
-                scene.restorePowered(state.powered());
-                mainMenu.setContinueAvailable(true);
-                if (result.recoveredFromBackup()) javax.swing.SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(this, "저장 파일을 읽을 수 없어 이전 백업으로 복구했습니다.",
-                        "저장 복구", JOptionPane.INFORMATION_MESSAGE));
-            }
+            var result = saveSlots.load(slot);
+            state = result.state();
+            gameStarted = true;
+            spareSelected = false;
+            replaceSave = false;
+            lastSaved = slot == timeescape.system.SaveSlots.Slot.AUTO && !result.recoveredFromBackup()
+                ? state.snapshot() : null;
+            scene.setEra(state.era());
+            scene.restorePowered(state.powered());
+            log(slot.title() + "에서 진행을 불러왔습니다.");
+            refresh();
+            cardLayout.show(cards, GAME);
+            GameAudio.get().era(state.era());
+            if (result.recoveredFromBackup()) JOptionPane.showMessageDialog(this,
+                "선택한 저장소의 이전 백업으로 복구했습니다.", "저장 복구", JOptionPane.INFORMATION_MESSAGE);
+            return true;
         } catch (java.io.IOException e) {
-            javax.swing.SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this,
-                "저장 파일을 불러올 수 없습니다. 원본 파일은 유지됩니다.\n" + saves.file()
-                + "\n게임 시작을 선택하면 새 진행으로 저장합니다.", "불러오기 실패", JOptionPane.WARNING_MESSAGE));
+            JOptionPane.showMessageDialog(this, "선택한 저장소를 불러오지 못했습니다. 기존 파일과 현재 진행은 유지됩니다.",
+                "불러오기 실패", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+    }
+
+    private boolean saveManualSlot(timeescape.system.SaveSlots.Slot slot) {
+        if (!gameStarted) return false;
+        try {
+            saveSlots.saveManual(slot, state.snapshot());
+            mainMenu.setContinueAvailable(true);
+            return true;
+        } catch (java.io.IOException e) {
+            JOptionPane.showMessageDialog(this, "저장하지 못했습니다. 저장 위치의 쓰기 권한과 남은 공간을 확인해주세요.",
+                "저장 실패", JOptionPane.WARNING_MESSAGE);
+            return false;
         }
     }
 
@@ -109,16 +138,10 @@ public final class GameFrame extends JFrame {
     private void initUI() {
         hud = new GameHud(scene, missions, inventory, this::showHelp, this::resetGame, this::showMainMenu);
         hud.setTransitionSettings(()->mainMenu.isTransitionAnimationEnabled(),value->mainMenu.setTransitionAnimation(value));
+        hud.setSaveSlots(saveSlots::summaries, this::saveManualSlot, this::loadSlot);
         gameRoot.add(hud, BorderLayout.CENTER);
     }
-    private void showHelp() {
-        JOptionPane.showMessageDialog(this,
-            "배경의 오브젝트를 클릭해 조사합니다.\nShift를 누르는 동안 상호작용 위치를 표시합니다.\n"
-            + "연구 노트: 현재 목표와 보유 아이템 확인\n보관함의 아이템을 클릭해 사용합니다.\n"
-            + "Esc: 연구 노트 닫기\n\n전력 복구 후 두 미션은 원하는 순서로 진행할 수 있습니다.\n"
-            + "두 미션을 모두 완료하면 손목 장치로 과거에 이동합니다.",
-            "조작 도움말", JOptionPane.INFORMATION_MESSAGE);
-    }
+    private void showHelp() { hud.openHelp(); }
     private void resetGame() {
         state = new GameState(); lastSaved = null; replaceSave = true; scene.restorePowered(false); spareSelected = false; hud.closeNotebook();
         log("어두운 연구실입니다. 벽면 철제 배전함에서 전력을 복구하세요.");
@@ -128,9 +151,10 @@ public final class GameFrame extends JFrame {
     private void initMainMenu() {
         mainMenu = new MainMenuPanel(new MainMenuPanel.MenuActions() {
             @Override public boolean confirmNewGame() {
-                return !saves.exists() || JOptionPane.showConfirmDialog(GameFrame.this,
-                    "새 게임을 시작하면 기존 저장 진행이 초기화됩니다. 시작할까요?",
-                    "새 게임", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+                if (!saves.exists()) return true;
+                scene.setInputBlocked(true);
+                continueSlots.open("newgame");
+                return false;
             }
             @Override public void startGame() {
                 state = new GameState();
@@ -146,10 +170,7 @@ public final class GameFrame extends JFrame {
                 GameAudio.get().era(state.era());
             }
             @Override public void continueGame() {
-                if (gameStarted) {
-                    cardLayout.show(cards, GAME);
-                    GameAudio.get().era(state.era());
-                }
+                showContinueSlots();
             }
             @Override public void showSettings() {
                 JCheckBox animation = new JCheckBox("게임 시작 시 소등·시계 파손 연출 사용", mainMenu.isTransitionAnimationEnabled());
@@ -161,14 +182,18 @@ public final class GameFrame extends JFrame {
                 if (result == JOptionPane.YES_OPTION) dispose();
             }
         });
-        mainMenu.setContinueAvailable(false);
+        mainMenu.setContinueAvailable(saveSlots.hasAny());
+        continueSlots = new GameMenuOverlay(mainMenu, this::closeContinueSlots, ()->{}, ()->{});
+        continueSlots.setSaveSlots(saveSlots::summaries, slot->false, this::loadSlot);
+        continueSlots.setNewGameAction(mainMenu::startConfirmedNewGame);
+        setGlassPane(continueSlots);
         cards.add(mainMenu, MENU);
         cards.add(gameRoot, GAME);
     }
 
     private void showMainMenu() {
         hud.closeNotebook();
-        mainMenu.setContinueAvailable(gameStarted);
+        mainMenu.setContinueAvailable(saveSlots.hasAny());
         cardLayout.show(cards, MENU);
         GameAudio.get().menu();
     }
@@ -178,7 +203,7 @@ public final class GameFrame extends JFrame {
         scene.setEra(era);
         scene.setPowered(state.powered());
         missions.refresh(state);
-        hud.setLocationTitle(state.locationTitle());
+        hud.setLocation(state.era().title(), state.locationTitle().replaceFirst("^.*? · ", ""));
         progress.setText("    " + stageText());
         inventory.refresh(state, spareSelected);
         saveProgress();

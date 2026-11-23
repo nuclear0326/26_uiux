@@ -52,6 +52,7 @@ public final class MainMenuPanel extends JPanel {
         elapsed += Math.min(.1,Math.max(0,dt));
         if (pending != null) {
             double audioTime = GameAudio.get().menuTransitionSeconds();
+            if (audioTime == -2) return; // Wait for soundtrack readiness without blocking Swing.
             departure = audioTime >= 0 ? Math.max(departure, audioTime) : departure + Math.max(0,dt);
             if (departure >= MenuStartTimeline.BREAK_AT && !glassPlayed) { glassPlayed=true; }
             if (departure >= MenuStartTimeline.END_AT) {
@@ -213,9 +214,11 @@ public final class MainMenuPanel extends JPanel {
         }
     }
 
-    private void activate(int button) {
+    public void startConfirmedNewGame() { activate(0,true); }
+    private void activate(int button) { activate(button,false); }
+    private void activate(int button,boolean confirmed) {
         if (runningTransition() || (button == 1 && !continueAvailable)) return;
-        if (button == 0 && !actions.confirmNewGame()) return;
+        if (button == 0 && !confirmed && !actions.confirmNewGame()) return;
         Runnable callback;
         switch (button) {
             case 0: callback = actions::startGame; break;

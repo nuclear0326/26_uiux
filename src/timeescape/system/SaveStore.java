@@ -18,8 +18,13 @@ public final class SaveStore {
     public record Loaded(GameState state, boolean recoveredFromBackup) {}
 
     public SaveStore(Path directory, ProgressCatalog catalog) {
-        this.file = directory.toAbsolutePath().resolve("progress.save");
-        this.backup = file.resolveSibling("progress.save.bak");
+        this(directory,catalog,"progress.save");
+    }
+    SaveStore(Path directory, ProgressCatalog catalog, String filename) {
+        if (!Set.of("progress.save","slot1.save","slot2.save","slot3.save","slot4.save").contains(filename))
+            throw new IllegalArgumentException("Unknown save filename");
+        this.file = directory.toAbsolutePath().resolve(filename);
+        this.backup = file.resolveSibling(filename+".bak");
         this.catalog = catalog;
     }
     public static Path defaultDirectory() {

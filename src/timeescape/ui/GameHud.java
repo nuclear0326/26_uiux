@@ -7,12 +7,16 @@ public final class GameHud extends JPanel {
  final GameMenuOverlay gameMenu;
  private final GameScenePanel gameScene;
  private JButton helpControl,menuControl;
- final JLabel location=new JLabel();final JTextArea toast=NotebookStyle.text("",15);
+ final JLabel timeValue=new JLabel("현재"),placeValue=new JLabel("연구실");
+ final JLabel location=new JLabel("TIME ESCAPE");final JTextArea toast=NotebookStyle.text("",15);
  private final Timer toastTimer=new Timer(6500,e->toast.setVisible(false));private final MissionPanel missions;private String selectedPage="records";
  public GameHud(GameScenePanel scene,MissionPanel missions,InventoryPanel inventory,Runnable help,Runnable reset,Runnable menu){
   this.missions=missions;this.gameScene=scene;gameMenu=new GameMenuOverlay(scene,this::closeGameMenu,menu,reset);inventory.setInteractionAllowed(()->!notebook.isTurning()&&!gameMenu.isVisible());setLayout(new BorderLayout());setBackground(new Color(20,19,17));
   JPanel header=new JPanel(new BorderLayout(18,0));header.setBackground(new Color(27,25,22));header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0,0,1,0,NotebookStyle.LINE),BorderFactory.createEmptyBorder(9,20,9,18)));
-  location.setFont(GameFonts.title(19));location.setForeground(new Color(236,222,194));header.add(location);
+  location.setFont(GameFonts.title(19));location.setForeground(new Color(236,222,194));
+  JPanel identity=new JPanel(new FlowLayout(FlowLayout.LEFT,22,0));identity.setOpaque(false);identity.add(location);
+  JSeparator divider=new JSeparator(SwingConstants.VERTICAL);divider.setForeground(new Color(112,98,75));divider.setPreferredSize(new Dimension(1,34));identity.add(divider);
+  JPanel timeField=locationField("시간",timeValue);timeField.setBorder(BorderFactory.createEmptyBorder(0,0,0,28));identity.add(timeField);identity.add(locationField("장소",placeValue));header.add(identity);
   JPanel buttons=new JPanel(new FlowLayout(FlowLayout.RIGHT,9,0));buttons.setOpaque(false);JButton helpButton=NotebookStyle.button("?",true),menuButton=NotebookStyle.button("",true);menuButton.setName("hamburger");helpControl=helpButton;menuControl=menuButton;helpButton.setPreferredSize(new Dimension(38,36));menuButton.setPreferredSize(new Dimension(38,36));
   helpButton.setToolTipText("조작 도움말");helpButton.getAccessibleContext().setAccessibleName("조작 도움말");menuButton.setToolTipText("메뉴");menuButton.getAccessibleContext().setAccessibleName("메뉴");
   noteButton.addActionListener(e->{if(notebook.isVisible())closeNotebook();else openNotebook(selectedPage);});helpButton.addActionListener(e->help.run());
@@ -26,10 +30,20 @@ public final class GameHud extends JPanel {
   toast.setForeground(new Color(240,226,201));toast.setBackground(new Color(31,29,25));toast.setOpaque(true);toast.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(NotebookStyle.LINE),BorderFactory.createEmptyBorder(9,12,9,12)));toast.setVisible(false);toastTimer.setRepeats(false);
   getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ESCAPE"),"closeNotebook");getActionMap().put("closeNotebook",new AbstractAction(){public void actionPerformed(ActionEvent e){if(gameMenu.isVisible())gameMenu.back();else closeNotebook();}});
  }
+ public void setSaveSlots(java.util.function.Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> save){gameMenu.setSaveSlots(slots,save,slot->false);}
+ public void setSaveSlots(java.util.function.Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> save,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> load){gameMenu.setSaveSlots(slots,save,load);}
  public void setTransitionSettings(java.util.function.BooleanSupplier get,java.util.function.Consumer<Boolean> set){gameMenu.setTransitionSettings(get,set);}
+ public void openHelp(){openGameMenu();gameMenu.showPage("help");}
+ private JPanel locationField(String label,JLabel value){
+  JPanel field=new JPanel();field.setOpaque(false);field.setLayout(new BoxLayout(field,BoxLayout.Y_AXIS));
+  JLabel caption=new JLabel(label);caption.setFont(GameFonts.body(16));caption.setForeground(new Color(164,157,143));caption.setAlignmentX(LEFT_ALIGNMENT);
+  value.setFont(GameFonts.button(22));value.setForeground(new Color(236,222,194));value.setAlignmentX(LEFT_ALIGNMENT);value.getAccessibleContext().setAccessibleName(label);
+  field.add(caption);field.add(value);return field;
+ }
+ public void setLocation(String time,String place){timeValue.setText(time);placeValue.setText(place);location.setToolTipText("시간: "+time+" | 장소: "+place);revalidate();repaint();}
  public void openGameMenu(){closeNotebook();toastTimer.stop();toast.setVisible(false);gameScene.setInputBlocked(true);noteButton.setEnabled(false);helpControl.setEnabled(false);menuControl.setSelected(true);gameMenu.open();}
  public void closeGameMenu(){gameMenu.release();gameScene.setInputBlocked(false);noteButton.setEnabled(true);helpControl.setEnabled(true);menuControl.setSelected(false);menuControl.requestFocusInWindow();}
- public void setLocationTitle(String text){location.setText("TIME ESCAPE   |   "+text);}
+ public void setLocationTitle(String text){String[] parts=text.split(" · ",2);setLocation(parts[0],parts.length>1?parts[1]:"연구실");}
  public void openNotebook(String page){
   if(gameMenu.isVisible())return;
   boolean animate=notebook.isVisible()&&!selectedPage.equals(page);

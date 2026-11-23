@@ -1,3 +1,47 @@
+# v57
+- Serialize audio IO and playback on a dedicated worker; keep Swing responsive.
+- Prewarm intro/thunder, retain audio-clock sync, cancel stale starts and close late loads.
+
+# v56
+- Precompute menu rain data and storm mask during build; retain exact approved frames.
+- UI initialization probe mean: 4734.51 ms to 862.27 ms; no game launched.
+
+# v54
+- Replace reset with in-game load; order Save, Load, Settings, Main Menu.
+- Restore existing save slots with the existing design and save format.
+
+# v53
+- Replace OS new-game confirmation with compact themed overlay.
+- Preserve confirmation, cancel and start-animation timing.
+
+# v52
+- Increase era/location captions to 16pt and values to 22pt.
+- Increase separation between era and location to 50px; preserve TIME ESCAPE styling and left placement.
+
+# v51
+- Apply selected two-line era/location header; preserve title and controls.
+
+# v50
+- Replace native help dialog with themed overlay and centered guidance.
+- Preserve TIME ESCAPE and display explicit era/place fields in HUD.
+
+# v49
+- Apply selected option 1: horizontal return arrow with rounded tip and semicircular bend.
+
+# v48
+- Add separator between auto and manual save slots.
+- Replace back labels with custom curved return arrows matching menu colors.
+
+# v47
+- Expand manual slots to 1–4; preserve automatic and existing slot files.
+- Adjust save/load layout to fit five slots with metadata at minimum window size.
+
+# v46
+- Add independent manual slots 1/2 below the existing automatic save.
+- Continue now opens a slot chooser; manual overwrite requires confirmation.
+- Preserve manual checkpoints across new game/reset.
+- Reuse translucent menu styling; show location, puzzle count and timestamp.
+
 # v45
 - Add UTF-8 file saves, validated restore, automatic checkpoints and backup recovery.
 - Enable existing Continue button from saved progress across process exits.
@@ -175,3 +219,9 @@ Shift: 떠다니는 원형 입자 → Effekseer 고정 광점 애니메이션.
 # CHANGELOG v14
 미래 통로 85/124칸으로 단축, 장애물 증가. 개발 세션 전용 Ctrl+Shift+F10 단계 스킵 추가.
 기본 비활성, 상단 메뉴에서 켜기, 퍼즐 제목에 개발 모드 표시. 과거 디자인 및 미래 재선택 유지.
+
+
+# v55
+- Swap new-game prompt buttons: Cancel on the left, Start on the right.
+
+

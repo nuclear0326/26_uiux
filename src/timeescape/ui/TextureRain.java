@@ -7,48 +7,21 @@ final class TextureRain {
  final java.util.List<double[]> events=new java.util.ArrayList<>();
  private double cycleSeconds;
  final float[] delta=new float[W*H];
- TextureRain(BufferedImage image,Shape glass){
-  var scaled=new BufferedImage(1600,900,BufferedImage.TYPE_INT_RGB);var g=scaled.createGraphics();g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BILINEAR);g.drawImage(image,0,0,1600,900,null);g.dispose();
-  scaled.getRGB(0,0,W,H,source,0,W);
-  for(int y=0;y<H;y++)for(int x=770;x<W-10;x++){
-   int idx=y*W+x;if(!glass.contains(x,y))continue;
-   double edge=1;
-   for(int d=1;d<=14;d++)if(!glass.contains(x,y-d)||!glass.contains(x,y+d)||!glass.contains(x-3,y)||!glass.contains(x+3,y)){edge=Math.min(edge,(d-1)/14.);break;}
-   weight[idx]=(float)edge;
-   int c=source[idx];double lum=((c>>16&255)+(c>>8&255)+(c&255))/3.;double avg=0;
-   for(int dx=-9;dx<=9;dx++){int q=source[y*W+x+dx];avg+=((q>>16&255)+(q>>8&255)+(q&255))/3.;}
-   // Fine, cool highlights belong to water; broad city lights remain in the base.
-   detail[idx]=(float)(Math.max(0,lum-avg/19-2)*Math.min(1,Math.max(0,((c&255)-(c>>16&255)+8)/22.)));
-  }
-  java.util.List<int[]> seeds=new java.util.ArrayList<>();
-  for(int y=25;y<220;y+=17)for(int x=790;x<1580;x+=11){
-   int best=-1;float strength=4;
-   for(int yy=y;yy<y+12;yy++)for(int xx=x;xx<x+8;xx++){
-    int idx=yy*W+xx;
-    if(weight[idx]>.95 && detail[idx]>strength){best=idx;strength=detail[idx];}
+ TextureRain(){
+  try(var raw=TextureRain.class.getResourceAsStream("/assets/effects/menu_rain.bin.gz")){
+   if(raw==null)throw new java.io.IOException("Missing precomputed rain data");
+   try(var in=new java.io.DataInputStream(new java.io.BufferedInputStream(new java.util.zip.GZIPInputStream(raw)))){
+    if(in.readInt()!=0x54455231 || in.readInt()!=1 || in.readInt()!=W || in.readInt()!=H)
+     throw new java.io.IOException("Unsupported rain data");
+    for(int i=0;i<source.length;i++)source[i]=in.readInt();
+    for(int i=0;i<detail.length;i++)detail[i]=in.readFloat();
+    for(int i=0;i<weight.length;i++)weight[i]=in.readFloat();
+    cycleSeconds=in.readDouble();int count=in.readInt();
+    if(!Double.isFinite(cycleSeconds)||cycleSeconds<=0||count<1||count>10000)throw new java.io.IOException("Invalid rain events");
+    for(int i=0;i<count;i++){double[] event=new double[5];for(int k=0;k<5;k++)event[k]=in.readDouble();events.add(event);}
+    if(in.read()!=-1)throw new java.io.IOException("Unexpected rain data");
    }
-   if(best<0)continue;int bx=best%W,by=best/W;int distance=0;
-   for(int d=0;d<155&&by+d<H;d++){if(weight[(by+d)*W+bx]<.8)break;distance=d;}
-   if(distance>=70)seeds.add(new int[]{bx,by,distance});
-  }
-  if(seeds.isEmpty())throw new IllegalStateException("No water paths");
-  var random=new java.util.Random(42173);var extra=new java.util.Random(91287);double start=-1.2;
-  for(int k=0;k<160;k++){
-   int[] seed=seeds.get(random.nextInt(seeds.size()));double speed=94.875+random.nextDouble()*51.75;
-   double distance=Math.min(seed[2]-8,95+random.nextDouble()*45);
-   events.add(new double[]{start,seed[0],seed[1],speed,distance/speed});
-   // Keep every original start time and speed. Add companions on four of every five starts.
-   if(k%5!=4){
-    int[] companion;
-    do{companion=seeds.get(extra.nextInt(seeds.size()));}while(Math.abs(companion[0]-seed[0])<18);
-    double extraSpeed=94.875+extra.nextDouble()*51.75;
-    double extraDistance=Math.min(companion[2]-8,95+extra.nextDouble()*45);
-    events.add(new double[]{start,companion[0],companion[1],extraSpeed,extraDistance/extraSpeed});
-   }
-   start+=.33+random.nextDouble()*.53;
-  }
-  cycleSeconds=start+1.2;
-
+  }catch(java.io.IOException e){throw new IllegalStateException("Cannot load precomputed menu rain",e);}
  }
  void draw(Graphics2D g,double t){
   java.util.Arrays.fill(delta,0);int active=0;
