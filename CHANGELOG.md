@@ -1,3 +1,19 @@
+# v61
+- Split five present puzzle models behind PresentPuzzle and PresentPuzzles registry.
+- Share cyclic controls and target comparison; preserve rules, artwork and stable IDs.
+
+# v60
+- Split gears and wires into independent panels with shared layout/lifecycle and dialog host.
+- Preserve input, staged completion, developer skip, artwork and save compatibility.
+
+# v59
+- Unify puzzle outcomes and dispatch through PuzzleRunner/PuzzleDialogs.
+- Remove Rush Hour progress writes; preserve delayed completion and cancellation.
+
+# v58
+- Serialize save/load/list IO off the EDT; preserve existing file format and backups.
+- Guard repeated input, stale list results, failed saves and final save before exit.
+
 # v57
 - Serialize audio IO and playback on a dedicated worker; keep Swing responsive.
 - Prewarm intro/thunder, retain audio-clock sync, cancel stale starts and close late loads.
@@ -223,5 +239,3 @@ Shift: 떠다니는 원형 입자 → Effekseer 고정 광점 애니메이션.
 
 # v55
 - Swap new-game prompt buttons: Cancel on the left, Start on the right.
-
-

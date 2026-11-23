@@ -1,15 +1,16 @@
 package timeescape.ui;
 import java.awt.*;
 import javax.swing.*;
-import timeescape.puzzle.PresentPuzzleModel;
+import timeescape.puzzle.present.PresentPuzzle;
+import timeescape.puzzle.present.PresentPuzzles;
 
 /** Dialog content shared with offscreen visual verification. */
 public final class PresentPuzzlePanel extends JPanel {
-    private PresentPuzzleModel puzzle;
+    private PresentPuzzle puzzle;
     private final JLabel status=new JLabel();
     private final JPanel instruments=new JPanel();
     public PresentPuzzlePanel(String id,Runnable onSolved,Runnable onClose){
-        super(new BorderLayout(0,18));puzzle=new PresentPuzzleModel(id);
+        super(new BorderLayout(0,18));puzzle=PresentPuzzles.create(id);
         setBackground(LabTheme.BACK);setBorder(BorderFactory.createEmptyBorder(24,30,24,30));
         JPanel header=new JPanel(new BorderLayout(0,8));header.setOpaque(false);
         JLabel serial=new JLabel("TIME ESCAPE  /  "+serial(id));serial.setForeground(LabTheme.GOLD);serial.setFont(GameFonts.body(13));header.add(serial,BorderLayout.NORTH);
@@ -19,13 +20,13 @@ public final class PresentPuzzlePanel extends JPanel {
         JPanel bottom=new JPanel(new BorderLayout(8,12));bottom.setOpaque(false);status.setFont(GameFonts.body(15));status.setForeground(LabTheme.GREEN);bottom.add(status,BorderLayout.NORTH);
         JPanel actions=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));actions.setOpaque(false);
         JButton reset=LabTheme.button("다시 맞추기"),close=LabTheme.button("조사 종료"),check=LabTheme.button("작동 확인");
-        reset.addActionListener(e->{puzzle=new PresentPuzzleModel(id);refresh();});close.addActionListener(e->onClose.run());
+        reset.addActionListener(e->{puzzle=PresentPuzzles.create(id);refresh();});close.addActionListener(e->onClose.run());
         check.addActionListener(e->{if(puzzle.solved())onSolved.run();else{status.setForeground(new Color(234,157,118));status.setText("아직 정렬되지 않았습니다. 계기와 연결 방향을 확인하세요.");}});
         actions.add(reset);actions.add(close);actions.add(check);bottom.add(actions,BorderLayout.SOUTH);add(bottom,BorderLayout.SOUTH);
         for(int i=0;i<puzzle.size();i++)instruments.add(new Instrument(i));refresh();
     }
     private static String serial(String id){return switch(id){case "PZ004"->"POWER DISTRIBUTION";case "PZ006"->"RESEARCH ARCHIVE";case "PZ008"->"DEVICE SCHEMATIC";case "PZ010"->"MODULE ASSEMBLY";default->"TEMPORAL ALIGNMENT";};}
-    private void refresh(){status.setForeground(LabTheme.GREEN);status.setText(puzzle.id.equals("PZ004")?"출력 "+puzzle.power()+" / 16  ·  필요한 회로만 연결하세요.":"부품을 클릭하여 조절  ·  Tab으로 선택 / Space로 회전");for(Component c:instruments.getComponents()){Instrument b=(Instrument)c;b.getAccessibleContext().setAccessibleName(puzzle.label(b.index));b.setToolTipText(puzzle.label(b.index));}instruments.repaint();}
+    private void refresh(){status.setForeground(LabTheme.GREEN);status.setText(puzzle.status());for(Component c:instruments.getComponents()){Instrument b=(Instrument)c;b.getAccessibleContext().setAccessibleName(puzzle.label(b.index));b.setToolTipText(puzzle.label(b.index));}instruments.repaint();}
     private final class Instrument extends JButton {
         final int index;
         Instrument(int index){this.index=index;setOpaque(false);setContentAreaFilled(false);setBorderPainted(false);setFocusPainted(false);setRolloverEnabled(true);setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));addActionListener(e->{puzzle.turn(index);refresh();});}
@@ -34,7 +35,7 @@ public final class PresentPuzzlePanel extends JPanel {
             g.setPaint(new GradientPaint(0,0,new Color(43,51,50),w,h,LabTheme.PANEL));g.fillRoundRect(1,1,w-2,h-2,14,14);
             g.setStroke(new BasicStroke(isFocusOwner()?2:1));g.setColor(getModel().isRollover()||isFocusOwner()?LabTheme.GOLD:LabTheme.LINE);g.drawRoundRect(1,1,w-3,h-3,14,14);
             LabTheme.screw(g,12,12);LabTheme.screw(g,w-13,h-13);g.setFont(GameFonts.body(12));g.setColor(LabTheme.MUTED);LabTheme.center(g,String.format("%02d",index+1),w/2,24);
-            switch(puzzle.id){case "PZ004"->power(g,w,h);case "PZ006"->code(g,w,h);case "PZ008"->schematic(g,w,h);case "PZ010"->module(g,w,h);default->clock(g,w,h);}g.dispose();
+            switch(puzzle.id()){case "PZ004"->power(g,w,h);case "PZ006"->code(g,w,h);case "PZ008"->schematic(g,w,h);case "PZ010"->module(g,w,h);default->clock(g,w,h);}g.dispose();
         }
         void power(Graphics2D g,int w,int h){
             boolean on=puzzle.value(index)==1;int cx=w/2,cy=h/2;int[] amps={2,3,5,7,11};

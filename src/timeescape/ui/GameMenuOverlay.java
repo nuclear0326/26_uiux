@@ -21,6 +21,15 @@ final class GameMenuOverlay extends JPanel {
     final HelpContent helpContent=new HelpContent();
     private Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots=java.util.List::of;
     private Predicate<timeescape.system.SaveSlots.Slot> saveSlot=slot->false,loadSlot=slot->false;
+    private java.util.function.Supplier<java.util.concurrent.CompletableFuture<java.util.List<timeescape.system.SaveSlots.Summary>>> asyncSlots;
+    private java.util.function.Function<timeescape.system.SaveSlots.Slot,java.util.concurrent.CompletableFuture<Boolean>> asyncSave,asyncLoad;
+    private boolean busy,loadingSlots,applyingSummaries;
+    private long pageRevision;
+    boolean isBusy(){return busy;}
+    void setAsyncSaveSlots(java.util.function.Supplier<java.util.concurrent.CompletableFuture<java.util.List<timeescape.system.SaveSlots.Summary>>> list,
+        java.util.function.Function<timeescape.system.SaveSlots.Slot,java.util.concurrent.CompletableFuture<Boolean>> save,
+        java.util.function.Function<timeescape.system.SaveSlots.Slot,java.util.concurrent.CompletableFuture<Boolean>> load){asyncSlots=list;asyncSave=save;asyncLoad=load;}
+    private void setBusy(boolean value){busy=value;dismiss.setEnabled(!value);for(JButton b:options)b.setEnabled(!value);}
     private timeescape.system.SaveSlots.Slot overwrite;
     private final JLabel information=new JLabel("",SwingConstants.CENTER);
     final Rectangle panel=new Rectangle();
@@ -32,7 +41,7 @@ final class GameMenuOverlay extends JPanel {
         setOpaque(false);setLayout(null);setVisible(false);setFocusCycleRoot(true);
         setFocusTraversalPolicy(new LayoutFocusTraversalPolicy());
         addMouseListener(new MouseAdapter(){});addMouseMotionListener(new MouseMotionAdapter(){});addMouseWheelListener(e->e.consume());
-        title.setForeground(new Color(241,229,205));add(title);dismiss.addActionListener(e->close.run());dismiss.setToolTipText("닫기 (Esc)");add(dismiss);
+        title.setForeground(new Color(241,229,205));add(title);dismiss.addActionListener(e->{if(!busy)close.run();});dismiss.setToolTipText("닫기 (Esc)");add(dismiss);
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ESCAPE"),"back");
         getActionMap().put("back",new AbstractAction(){public void actionPerformed(ActionEvent e){back();}});
         information.setForeground(new Color(185,177,161));information.setFont(GameFonts.body(14));add(information);
@@ -74,27 +83,32 @@ final class GameMenuOverlay extends JPanel {
         }
     };b.setName(name);b.setOpaque(false);b.setBorderPainted(false);b.setContentAreaFilled(false);b.setFocusPainted(false);b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));b.setFont(GameFonts.button(30));return b;}
     private void option(String label,String name,Runnable action){JButton b=link(label,name);
-        if(label.equals("돌아가기")){b.setText("");b.putClientProperty("backArrow",true);b.setToolTipText("돌아가기 (Esc)");b.getAccessibleContext().setAccessibleName("돌아가기");}b.addActionListener(e->action.run());options.add(b);add(b);}
-    void showPage(String next){page=next;newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();
+        if(label.equals("돌아가기")){b.setText("");b.putClientProperty("backArrow",true);b.setToolTipText("돌아가기 (Esc)");b.getAccessibleContext().setAccessibleName("돌아가기");}b.addActionListener(e->{if(!busy)action.run();});options.add(b);add(b);}
+    void showPage(String next){if(busy)return;long revision=++pageRevision;page=next;newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();
         switch(next){
             case "newgame"->{title.setText("새 게임을 시작할까요?");option("취소","cancel-newgame",close);option("시작","confirm-newgame",()->{if(!isVisible())return;close.run();newGame.run();});}
             case "help"->{title.setText("조작 도움말");option("닫기","help-close",close);}
             case "save","load","ingameload"->{
                 boolean saving=next.equals("save");title.setText(saving?"저장":next.equals("ingameload")?"불러오기":"이어하기");
                 information.setText(saving?"자동저장은 자동 갱신 · 저장소를 눌러 저장":"불러올 저장소를 선택하세요");
+                if(asyncSlots!=null&&!applyingSummaries){
+                    loadingSlots=true;
+                    slots=()->java.util.Arrays.stream(timeescape.system.SaveSlots.Slot.values())
+                        .map(slot->new timeescape.system.SaveSlots.Summary(slot,false,false,false,"확인 중…", "")).toList();
+                }
                 for(var summary:slots.get()){
                     var slot=summary.slot();
                     option(slot.title(),"slot-"+slot.name(),()->{
                         if(saving){
                             if(summary.exists()){overwrite=slot;showPage("overwrite");}
                             else saveSelected(slot);
-                        }else if(loadSlot.test(slot))close.run();
+                        }else loadSelected(slot);
                     });
                     JButton button=options.get(options.size()-1);
                     button.putClientProperty("detail",summary.progress());button.putClientProperty("time",summary.time());
                     button.setToolTipText(summary.slot().title()+" · "+summary.progress()+" · "+summary.time());
                     button.getAccessibleContext().setAccessibleDescription(button.getToolTipText());
-                    button.setEnabled(saving?slot!=timeescape.system.SaveSlots.Slot.AUTO:summary.loadable());
+                    button.setEnabled(!loadingSlots&&(saving?slot!=timeescape.system.SaveSlots.Slot.AUTO:summary.loadable()));
                 }
                 option("돌아가기","back",()->{if(saving||next.equals("ingameload"))showPage("menu");else close.run();});
             }
@@ -103,16 +117,41 @@ final class GameMenuOverlay extends JPanel {
             default->{title.setText("게임 메뉴");option("저장","save",()->showPage("save"));option("불러오기","load",()->showPage("ingameload"));option("설정","settings",()->showPage("settings"));option("메인 메뉴","main",()->{close.run();main.run();});}
         }
         revalidate();doLayout();repaint();if(isShowing())focusFirst();
+        if(asyncSlots!=null&&!applyingSummaries&&(next.equals("save")||next.equals("load")||next.equals("ingameload"))){
+            asyncSlots.get().whenCompleteAsync((list,error)->{
+                if(revision!=pageRevision||!isVisible())return;
+                loadingSlots=false;
+                if(error!=null){information.setText("저장소를 확인하지 못했습니다. 다시 열어주세요.");return;}
+                String status=information.getText();slots=()->list;applyingSummaries=true;
+                try{showPage(next);information.setText(status);}finally{applyingSummaries=false;}
+            },SwingUtilities::invokeLater);
+        }
     }
     private void focusFirst(){options.stream().filter(JButton::isEnabled).findFirst().ifPresent(JButton::requestFocusInWindow);}
+    private void loadSelected(timeescape.system.SaveSlots.Slot slot){
+        if(asyncLoad==null){if(loadSlot.test(slot))close.run();return;}
+        String previous=page;setBusy(true);information.setText("불러오는 중…");
+        asyncLoad.apply(slot).whenCompleteAsync((ok,error)->{
+            setBusy(false);
+            if(error==null&&Boolean.TRUE.equals(ok)){close.run();}
+            else{showPage(previous);information.setText("불러오지 못했습니다. 현재 진행은 유지됩니다.");}
+        },SwingUtilities::invokeLater);
+    }
     private void saveSelected(timeescape.system.SaveSlots.Slot slot){
+        if(asyncSave!=null){
+            setBusy(true);information.setText("저장 중…");
+            asyncSave.apply(slot).whenCompleteAsync((ok,error)->{
+                setBusy(false);showPage("save");
+                information.setText(error==null&&Boolean.TRUE.equals(ok)?slot.title()+"에 저장했습니다.":"저장하지 못했습니다. 다시 시도해주세요.");
+            },SwingUtilities::invokeLater);return;
+        }
         boolean success=saveSlot.test(slot);showPage("save");
         information.setText(success?slot.title()+"에 저장했습니다.":"저장하지 못했습니다. 다시 시도해주세요.");
     }
     void open(){open("menu");}
     void open(String page){showPage(page);backdrop=null;setVisible(true);repaint();focusFirst();}
-    void release(){setVisible(false);backdrop=null;}
-    void back(){if(page.equals("menu")||page.equals("load")||page.equals("help")||page.equals("newgame"))close.run();else showPage(page.equals("overwrite")?"save":"menu");}
+    void release(){pageRevision++;setVisible(false);backdrop=null;}
+    void back(){if(busy)return;if(page.equals("menu")||page.equals("load")||page.equals("help")||page.equals("newgame"))close.run();else showPage(page.equals("overwrite")?"save":"menu");}
     private void prepareBackdrop(){
         if(backdrop!=null&&cachedWidth==getWidth()&&cachedHeight==getHeight())return;
         cachedWidth=getWidth();cachedHeight=getHeight();int w=Math.max(1,getWidth()/3),h=Math.max(1,getHeight()/3);

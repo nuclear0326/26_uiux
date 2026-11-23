@@ -86,3 +86,15 @@ EXE 옆의 app 및 runtime 폴더를 함께 유지해야 합니다. Java 별도 
 
 ## v57
 오디오 초기화는 전용 스레드에서 처리합니다. 음원과 연출 타이밍은 유지하며, 시작 소리가 준비되기 전에는 연출 시간만 보류합니다. 상세 검증은 TEST_REPORT.md를 참고하세요.
+
+## v58
+저장·불러오기·저장소 조회는 전용 스레드에서 처리합니다. 기존 저장 데이터는 그대로 사용합니다. 검증 결과는 TEST_REPORT.md를 참고하세요.
+
+## v59
+미니게임 실행 등록은 PuzzleDialogs, 완료 검증 및 반영은 PuzzleRunner에서 담당합니다. 모든 미니게임은 PuzzleResult를 반환하며 진행 데이터를 직접 수정하지 않습니다. 기존 저장 파일은 변환 없이 사용할 수 있습니다. 상세 검증은 TEST_REPORT.md를 참고하세요.
+
+## v60
+GearsPuzzlePanel과 WiresPuzzlePanel은 독립 모델/입력을 소유합니다. RepairPuzzlePanel은 공통 배치·완료 콜백, RepairPuzzleDialog는 공통 창을 담당합니다. 새 수리 퍼즐 패널은 공통 창의 PanelFactory로 연결할 수 있습니다. TEST_REPORT.md에 검증을 기록했습니다.
+
+## v61
+현재 퍼즐의 규칙은 puzzle/present 아래 개별 모델에 있습니다. PresentPuzzle이 공통 계약, PresentPuzzles가 생성 등록표입니다. 순환 조작은 CyclicValuesPuzzle을 재사용할 수 있습니다. UI는 새 인터페이스를 사용하며 이전 PresentPuzzleModel은 위임 어댑터입니다. TEST_REPORT.md에 비교 검증을 기록했습니다.

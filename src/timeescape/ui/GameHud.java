@@ -32,6 +32,7 @@ public final class GameHud extends JPanel {
  }
  public void setSaveSlots(java.util.function.Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> save){gameMenu.setSaveSlots(slots,save,slot->false);}
  public void setSaveSlots(java.util.function.Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> save,java.util.function.Predicate<timeescape.system.SaveSlots.Slot> load){gameMenu.setSaveSlots(slots,save,load);}
+ public void setAsyncSaveSlots(java.util.function.Supplier<java.util.concurrent.CompletableFuture<java.util.List<timeescape.system.SaveSlots.Summary>>> slots,java.util.function.Function<timeescape.system.SaveSlots.Slot,java.util.concurrent.CompletableFuture<Boolean>> save,java.util.function.Function<timeescape.system.SaveSlots.Slot,java.util.concurrent.CompletableFuture<Boolean>> load){gameMenu.setAsyncSaveSlots(slots,save,load);}
  public void setTransitionSettings(java.util.function.BooleanSupplier get,java.util.function.Consumer<Boolean> set){gameMenu.setTransitionSettings(get,set);}
  public void openHelp(){openGameMenu();gameMenu.showPage("help");}
  private JPanel locationField(String label,JLabel value){
@@ -42,7 +43,7 @@ public final class GameHud extends JPanel {
  }
  public void setLocation(String time,String place){timeValue.setText(time);placeValue.setText(place);location.setToolTipText("시간: "+time+" | 장소: "+place);revalidate();repaint();}
  public void openGameMenu(){closeNotebook();toastTimer.stop();toast.setVisible(false);gameScene.setInputBlocked(true);noteButton.setEnabled(false);helpControl.setEnabled(false);menuControl.setSelected(true);gameMenu.open();}
- public void closeGameMenu(){gameMenu.release();gameScene.setInputBlocked(false);noteButton.setEnabled(true);helpControl.setEnabled(true);menuControl.setSelected(false);menuControl.requestFocusInWindow();}
+ public void closeGameMenu(){if(gameMenu.isBusy())return;gameMenu.release();gameScene.setInputBlocked(false);noteButton.setEnabled(true);helpControl.setEnabled(true);menuControl.setSelected(false);menuControl.requestFocusInWindow();}
  public void setLocationTitle(String text){String[] parts=text.split(" · ",2);setLocation(parts[0],parts.length>1?parts[1]:"연구실");}
  public void openNotebook(String page){
   if(gameMenu.isVisible())return;

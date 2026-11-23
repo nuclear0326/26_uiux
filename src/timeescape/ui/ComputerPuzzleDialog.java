@@ -26,7 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
-import timeescape.core.GameState;
+import timeescape.puzzle.PuzzleResult;
 import timeescape.system.GameAudio;
 import timeescape.puzzle.FileRushHourModel;
 import timeescape.puzzle.FileRushHourModel.FileBlock;
@@ -43,9 +43,7 @@ public final class ComputerPuzzleDialog extends JDialog {
     private static final Color CYAN = new Color(99, 224, 218);
     private static final Color MUTED = new Color(161, 191, 208);
 
-    private final GameState state;
-    private final String puzzleId;
-    private final Runnable onSuccess;
+    private PuzzleResult result = PuzzleResult.CANCELLED;
     private final FileRushHourModel model = new FileRushHourModel();
     private final Board board = new Board();
     private final JLabel moves = new JLabel("이동 0회");
@@ -61,15 +59,14 @@ public final class ComputerPuzzleDialog extends JDialog {
             return timer::stop;
         });
 
-    public ComputerPuzzleDialog(Frame owner, GameState state, Runnable onSuccess) {
-        this(owner, state, "PZ001", onSuccess);
+    public static PuzzleResult play(Frame owner) {
+        ComputerPuzzleDialog dialog = new ComputerPuzzleDialog(owner);
+        dialog.setVisible(true);
+        return dialog.result;
     }
 
-    public ComputerPuzzleDialog(Frame owner, GameState state, String puzzleId, Runnable onSuccess) {
+    private ComputerPuzzleDialog(Frame owner) {
         super(owner, "진단 컴퓨터 | 데이터 추출 터미널", true);
-        this.state = state;
-        this.puzzleId = puzzleId;
-        this.onSuccess = onSuccess;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(975, 728);
         setMinimumSize(new Dimension(905, 660));
@@ -78,7 +75,7 @@ public final class ComputerPuzzleDialog extends JDialog {
         bindKeys();
         timeescape.system.DeveloperMode.bind(getRootPane(), () -> {
             if(finished)return;
-            finished=true;state.complete(puzzleId);dispose();onSuccess.run();
+            finished=true;result=PuzzleResult.SOLVED;dispose();
         });
         if(timeescape.system.DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Ctrl+Shift+F10 스킵]");
         refreshStatus("파일 블록을 밀어 SYS.CFG를 오른쪽 전송 포트로 내보내세요.");
@@ -278,15 +275,15 @@ public final class ComputerPuzzleDialog extends JDialog {
             GameAudio.get().play("puzzle_success");
             refreshStatus("EXPORT COMPLETE — SYS.CFG 전송 완료. 설계 결함 분석 파일을 복원했습니다!");
             completion.schedule(600, () -> finished && model.solved() && isDisplayable(), () -> {
-                state.complete(puzzleId);
+                result=PuzzleResult.SOLVED;
                 dispose();
-                onSuccess.run();
             });
         }
     }
 
     private void resetPuzzle() {
         completion.cancel();
+        result=PuzzleResult.CANCELLED;
         finished = false;
         model.reset();
         selectedId = "SYS";
