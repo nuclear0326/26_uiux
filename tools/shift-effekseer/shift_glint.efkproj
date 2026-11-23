@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EffekseerProject><Root><Name>Root</Name><Children><Node>
+<CommonValues><MaxGeneration><Value>1</Value></MaxGeneration><Life><Center>90</Center><Max>90</Max><Min>90</Min></Life></CommonValues>
+<RendererCommonValues><ColorTexture>glint.png</ColorTexture><AlphaBlend>1</AlphaBlend><ZTest>False</ZTest><FadeInType>1</FadeInType><FadeIn><Frame>35</Frame></FadeIn><FadeOutType>1</FadeOutType><FadeOut><Frame>55</Frame></FadeOut></RendererCommonValues>
+<DrawingValues><Type>2</Type><Sprite><Billboard>0</Billboard></Sprite></DrawingValues>
+<Name>Quiet light</Name><Children/></Node></Children></Root><ToolVersion>1.80.8</ToolVersion><Version>3</Version><StartFrame>0</StartFrame><EndFrame>90</EndFrame><IsLoop>True</IsLoop></EffekseerProject>

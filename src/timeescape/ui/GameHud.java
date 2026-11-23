@@ -1,0 +1,42 @@
+package timeescape.ui;
+import java.awt.*;import java.awt.event.*;import javax.swing.*;
+/** Production HUD shared with offscreen verification. */
+public final class GameHud extends JPanel {
+ final JLayeredPane layers=new JLayeredPane();final TurningNotebook notebook=new TurningNotebook();final JPanel pages=new JPanel(new CardLayout());
+ final JButton noteButton=NotebookStyle.button("연구 노트",true),recordTab=NotebookStyle.button("연구 기록",false),inventoryTab=NotebookStyle.button("보관함",false);
+ final GameMenuOverlay gameMenu;
+ private final GameScenePanel gameScene;
+ private JButton helpControl,menuControl;
+ final JLabel location=new JLabel();final JTextArea toast=NotebookStyle.text("",15);
+ private final Timer toastTimer=new Timer(6500,e->toast.setVisible(false));private final MissionPanel missions;private String selectedPage="records";
+ public GameHud(GameScenePanel scene,MissionPanel missions,InventoryPanel inventory,Runnable help,Runnable reset,Runnable menu){
+  this.missions=missions;this.gameScene=scene;gameMenu=new GameMenuOverlay(scene,this::closeGameMenu,menu,reset);inventory.setInteractionAllowed(()->!notebook.isTurning()&&!gameMenu.isVisible());setLayout(new BorderLayout());setBackground(new Color(20,19,17));
+  JPanel header=new JPanel(new BorderLayout(18,0));header.setBackground(new Color(27,25,22));header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0,0,1,0,NotebookStyle.LINE),BorderFactory.createEmptyBorder(9,20,9,18)));
+  location.setFont(GameFonts.title(19));location.setForeground(new Color(236,222,194));header.add(location);
+  JPanel buttons=new JPanel(new FlowLayout(FlowLayout.RIGHT,9,0));buttons.setOpaque(false);JButton helpButton=NotebookStyle.button("?",true),menuButton=NotebookStyle.button("",true);menuButton.setName("hamburger");helpControl=helpButton;menuControl=menuButton;helpButton.setPreferredSize(new Dimension(38,36));menuButton.setPreferredSize(new Dimension(38,36));
+  helpButton.setToolTipText("조작 도움말");helpButton.getAccessibleContext().setAccessibleName("조작 도움말");menuButton.setToolTipText("메뉴");menuButton.getAccessibleContext().setAccessibleName("메뉴");
+  noteButton.addActionListener(e->{if(notebook.isVisible())closeNotebook();else openNotebook(selectedPage);});helpButton.addActionListener(e->help.run());
+  menuButton.addActionListener(e->{if(gameMenu.isVisible())closeGameMenu();else openGameMenu();});buttons.add(noteButton);buttons.add(helpButton);buttons.add(menuButton);header.add(buttons,BorderLayout.EAST);add(header,BorderLayout.NORTH);
+  layers.setLayout(new LayoutManager(){public void addLayoutComponent(String n,Component c){}public void removeLayoutComponent(Component c){}public Dimension preferredLayoutSize(Container c){return new Dimension(1440,755);}public Dimension minimumLayoutSize(Container c){return new Dimension(800,500);}public void layoutContainer(Container c){int w=c.getWidth(),h=c.getHeight();scene.setBounds(0,0,w,h);gameMenu.setBounds(0,0,w,h);int nw=Math.min(460,Math.max(370,(int)(w*.32)));notebook.setBounds(w-nw-18,18,nw,Math.min(660,h-36));int tw=Math.min(680,w-nw-54);toast.setBounds(24,h-94,Math.max(280,tw),70);}});
+  layers.add(gameMenu,Integer.valueOf(300));layers.add(scene,Integer.valueOf(0));layers.add(notebook,Integer.valueOf(100));layers.add(toast,Integer.valueOf(200));add(layers);
+  notebook.setLayout(new BorderLayout(0,16));notebook.setBorder(BorderFactory.createEmptyBorder(23,24,26,27));notebook.addMouseListener(new MouseAdapter(){});notebook.addMouseMotionListener(new MouseMotionAdapter(){});
+  JPanel top=new JPanel(new BorderLayout(0,16));top.setOpaque(false);JPanel titleRow=new JPanel(new BorderLayout());titleRow.setOpaque(false);JLabel title=new JLabel("연구 노트");title.setFont(GameFonts.title(28));title.setForeground(NotebookStyle.INK);titleRow.add(title);JButton close=NotebookStyle.button("×",false);close.setPreferredSize(new Dimension(32,32));close.setToolTipText("연구 노트 닫기 (Esc)");close.addActionListener(e->closeNotebook());titleRow.add(close,BorderLayout.EAST);top.add(titleRow,BorderLayout.NORTH);
+  JPanel tabs=new JPanel(new GridLayout(1,2,4,0));tabs.setOpaque(false);tabs.add(recordTab);tabs.add(inventoryTab);top.add(tabs);notebook.add(top,BorderLayout.NORTH);recordTab.addActionListener(e->openNotebook("records"));inventoryTab.addActionListener(e->openNotebook("inventory"));
+  pages.setOpaque(false);pages.add(NotebookStyle.scroll(missions),"records");pages.add(NotebookStyle.scroll(inventory),"inventory");notebook.add(pages);notebook.setVisible(false);
+  toast.setForeground(new Color(240,226,201));toast.setBackground(new Color(31,29,25));toast.setOpaque(true);toast.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(NotebookStyle.LINE),BorderFactory.createEmptyBorder(9,12,9,12)));toast.setVisible(false);toastTimer.setRepeats(false);
+  getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ESCAPE"),"closeNotebook");getActionMap().put("closeNotebook",new AbstractAction(){public void actionPerformed(ActionEvent e){if(gameMenu.isVisible())gameMenu.back();else closeNotebook();}});
+ }
+ public void setTransitionSettings(java.util.function.BooleanSupplier get,java.util.function.Consumer<Boolean> set){gameMenu.setTransitionSettings(get,set);}
+ public void openGameMenu(){closeNotebook();toastTimer.stop();toast.setVisible(false);gameScene.setInputBlocked(true);noteButton.setEnabled(false);helpControl.setEnabled(false);menuControl.setSelected(true);gameMenu.open();}
+ public void closeGameMenu(){gameMenu.release();gameScene.setInputBlocked(false);noteButton.setEnabled(true);helpControl.setEnabled(true);menuControl.setSelected(false);menuControl.requestFocusInWindow();}
+ public void setLocationTitle(String text){location.setText("TIME ESCAPE   |   "+text);}
+ public void openNotebook(String page){
+  if(gameMenu.isVisible())return;
+  boolean animate=notebook.isVisible()&&!selectedPage.equals(page);
+  notebook.turnTo(()->{selectedPage=page;((CardLayout)pages.getLayout()).show(pages,page);recordTab.setSelected(page.equals("records"));inventoryTab.setSelected(page.equals("inventory"));},page.equals("records"),animate);
+  notebook.setVisible(true);noteButton.setSelected(true);revalidate();repaint();recordTab.requestFocusInWindow();
+ }
+ public void closeNotebook(){notebook.finishTurn();notebook.setVisible(false);noteButton.setSelected(false);noteButton.requestFocusInWindow();repaint();}
+ public void showMessage(String value){missions.setLastMessage(value);toast.setText(value);toast.setVisible(true);toastTimer.restart();}
+ public void removeNotify(){gameMenu.release();gameScene.setInputBlocked(false);notebook.finishTurn();toastTimer.stop();toast.setVisible(false);super.removeNotify();}
+}

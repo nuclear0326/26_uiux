@@ -1,0 +1,19 @@
+Generator: built-in image_gen (not CLI). Preview implementation: work/uix_v41.
+Existing v40 Windows release was not replaced. No game main, JFrame or EXE was launched.
+
+Paper prompt:
+Create a game UI texture asset only: one flat aged research notebook paper sheet filling entire portrait image edge-to-edge, aspect ratio 2:3. Orthographic scan, no perspective. Warm ivory parchment center, readable quiet low contrast central 80 percent reserved for Korean text; authentic fine cellulose fibers, subtle uneven antique yellowing, sparse faint foxing, very faint broad creases. More pronounced irregular dark tan worn edges and soft inner edge shadow, small worn rounded corners and a slight layered paper lip near bottom-right. Paper only, NO writing, NO graphics, NO ruled lines, NO rings, NO holes, NO spiral binding, NO background, NO burnt black edges. Realistic photographic material, restrained abandoned laboratory journal atmosphere. Avoid excessive high-frequency noise and prominent stains behind text. This texture will be stretched to a narrow 440x650 UI panel, so keep details fine and edges subtle but visible.
+
+Item atlas prompt:
+Create a production game inventory SPRITE ATLAS, transparent background, exactly FOUR columns and TWO rows of equal square cells, 2048x1024 landscape. 8 cells. Each object entirely contained and centered within its own cell with generous 12% transparent padding. NO grid lines, NO text, NO labels, NO paper backgrounds. Detailed realistic painted cinematic 3D-looking old electronics props for an abandoned rainy 1980s laboratory escape room, muted gunmetal, patinated brass, aged copper, subtle wear, soft upper-left lighting and tiny contact shading only. Legible silhouettes at 90px, no flat vector style, no cartoons, no neon. Exact row-major cell order: top row 1 a worn black swivel USB thumb drive with exposed metal USB connector; 2 empty rectangular gunmetal electronics enclosure/case with screws and open top; 3 compact cylindrical industrial battery power cell with brass terminals; 4 a small dark green electronic circuit controller with copper traces and vintage capacitors. Bottom row 1 wrist-mounted time travel instrument resembling small brass analog clock with leather wrist strap; 2 spare clockwork repair assembly with two interlocking brass gears and axle; 3 futuristic but grounded energy core module with copper coils and faint cool-blue glass inset; 4 a folded aged engineering schematic paper. Precise 4x2 evenly spaced atlas layout for runtime slicing, each object visually occupies about 75% of its square. All objects same coherent realistic textured illustration style.
+
+Saved project assets:
+work/uix_v41/src/assets/images/notebook/paper.png
+work/uix_v41/src/assets/images/notebook/items.png
+
+Validation:
+JDK 21 compilation passed. Actual GameHud rendered offscreen at 1440x810 and 1020x650.
+110 deterministic frames: records -> inventory -> records. 460ms transition each direction.
+Rapid switch, completion and close release the timer and captured page images.
+Inventory callbacks guarded during turning. Existing state-dependent item list retained.
+Snapshots use an isolated test state with restored power and collected items; not a user's save.

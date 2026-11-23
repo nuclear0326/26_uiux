@@ -1,0 +1,1 @@
+TIME ESCAPE v23: menu_thunder.wav and clock_glass.wav are original procedural sounds generated with seeded noise/sine synthesis; no external audio samples.
