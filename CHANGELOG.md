@@ -1,3 +1,11 @@
+# v67
+- Persist unread item IDs in schema 2, with legacy schema 1 loading.
+- Autosave after hover acknowledgement; restore per-slot read states without replaying pickup effects.
+
+# v66
+- Fix repair puzzle button contrast with theme-independent rendering.
+- Add queued 1.8-second item pickup notices and hover-to-read inventory dots.
+
 # v62
 - Derive Shift spotlight/particle hints from current interaction progress.
 - Invalidate masks after completion, pickup and restore; preserve fade and save format.

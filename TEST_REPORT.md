@@ -1,3 +1,9 @@
+# v67
+21 unread-state checks, 45 save checks, 16 asynchronous queue checks and 20 slot checks passed. Separate headless JVM verified process-restart restoration. Legacy schema, checksum and backup verified with temporary test saves only. No game window, EXE or audio launched.
+
+# v66
+16 acquisition/queue/expiry/hover/reload/reward/native-theme checks and 45 save compatibility checks passed. Actual panels rendered headlessly. No game or audio launched. Unread indicators are session UI state, reset on loading another GameState; save schema unchanged.
+
 # v62 진행 상태별 Shift 강조
 
 InteractionHint는 기존 GameState와 진행 설정에서 NONE/LATER/READY를 계산합니다.

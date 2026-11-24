@@ -132,6 +132,7 @@ public final class GameFrame extends JFrame {
     }
 
     private void initUI() {
+        inventory.setReadListener(this::queueAutoSave);
         hud = new GameHud(scene, missions, inventory, this::showHelp, this::resetGame, this::showMainMenu);
         hud.setTransitionSettings(()->mainMenu.isTransitionAnimationEnabled(),value->mainMenu.setTransitionAnimation(value));
         hud.setAsyncSaveSlots(saveQueue::summaries, this::saveManualSlot, this::loadSlot);

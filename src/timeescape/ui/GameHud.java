@@ -5,13 +5,14 @@ public final class GameHud extends JPanel {
  final JLayeredPane layers=new JLayeredPane();final TurningNotebook notebook=new TurningNotebook();final JPanel pages=new JPanel(new CardLayout());
  final JButton noteButton=NotebookStyle.button("연구 노트",true),recordTab=NotebookStyle.button("연구 기록",false),inventoryTab=NotebookStyle.button("보관함",false);
  final GameMenuOverlay gameMenu;
+ final ItemAcquisitionToast itemNotice=new ItemAcquisitionToast();
  private final GameScenePanel gameScene;
  private JButton helpControl,menuControl;
  final JLabel timeValue=new JLabel("현재"),placeValue=new JLabel("연구실");
  final JLabel location=new JLabel("TIME ESCAPE");final JTextArea toast=NotebookStyle.text("",15);
  private final Timer toastTimer=new Timer(6500,e->toast.setVisible(false));private final MissionPanel missions;private String selectedPage="records";
  public GameHud(GameScenePanel scene,MissionPanel missions,InventoryPanel inventory,Runnable help,Runnable reset,Runnable menu){
-  this.missions=missions;this.gameScene=scene;gameMenu=new GameMenuOverlay(scene,this::closeGameMenu,menu,reset);inventory.setInteractionAllowed(()->!notebook.isTurning()&&!gameMenu.isVisible());setLayout(new BorderLayout());setBackground(new Color(20,19,17));
+  this.missions=missions;this.gameScene=scene;inventory.setAcquisitionListener(itemNotice::enqueue,itemNotice::clear);gameMenu=new GameMenuOverlay(scene,this::closeGameMenu,menu,reset);inventory.setInteractionAllowed(()->!notebook.isTurning()&&!gameMenu.isVisible());setLayout(new BorderLayout());setBackground(new Color(20,19,17));
   JPanel header=new JPanel(new BorderLayout(18,0));header.setBackground(new Color(27,25,22));header.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0,0,1,0,NotebookStyle.LINE),BorderFactory.createEmptyBorder(9,20,9,18)));
   location.setFont(GameFonts.title(19));location.setForeground(new Color(236,222,194));
   JPanel identity=new JPanel(new FlowLayout(FlowLayout.LEFT,22,0));identity.setOpaque(false);identity.add(location);
@@ -21,8 +22,8 @@ public final class GameHud extends JPanel {
   helpButton.setToolTipText("조작 도움말");helpButton.getAccessibleContext().setAccessibleName("조작 도움말");menuButton.setToolTipText("메뉴");menuButton.getAccessibleContext().setAccessibleName("메뉴");
   noteButton.addActionListener(e->{if(notebook.isVisible())closeNotebook();else openNotebook(selectedPage);});helpButton.addActionListener(e->help.run());
   menuButton.addActionListener(e->{if(gameMenu.isVisible())closeGameMenu();else openGameMenu();});buttons.add(noteButton);buttons.add(helpButton);buttons.add(menuButton);header.add(buttons,BorderLayout.EAST);add(header,BorderLayout.NORTH);
-  layers.setLayout(new LayoutManager(){public void addLayoutComponent(String n,Component c){}public void removeLayoutComponent(Component c){}public Dimension preferredLayoutSize(Container c){return new Dimension(1440,755);}public Dimension minimumLayoutSize(Container c){return new Dimension(800,500);}public void layoutContainer(Container c){int w=c.getWidth(),h=c.getHeight();scene.setBounds(0,0,w,h);gameMenu.setBounds(0,0,w,h);int nw=Math.min(460,Math.max(370,(int)(w*.32)));notebook.setBounds(w-nw-18,18,nw,Math.min(660,h-36));int tw=Math.min(680,w-nw-54);toast.setBounds(24,h-94,Math.max(280,tw),70);}});
-  layers.add(gameMenu,Integer.valueOf(300));layers.add(scene,Integer.valueOf(0));layers.add(notebook,Integer.valueOf(100));layers.add(toast,Integer.valueOf(200));add(layers);
+  layers.setLayout(new LayoutManager(){public void addLayoutComponent(String n,Component c){}public void removeLayoutComponent(Component c){}public Dimension preferredLayoutSize(Container c){return new Dimension(1440,755);}public Dimension minimumLayoutSize(Container c){return new Dimension(800,500);}public void layoutContainer(Container c){int w=c.getWidth(),h=c.getHeight();scene.setBounds(0,0,w,h);itemNotice.setBounds(Math.max(12,w-378),14,Math.min(360,w-24),100);gameMenu.setBounds(0,0,w,h);int nw=Math.min(460,Math.max(370,(int)(w*.32)));notebook.setBounds(w-nw-18,18,nw,Math.min(660,h-36));int tw=Math.min(680,w-nw-54);toast.setBounds(24,h-94,Math.max(280,tw),70);}});
+  layers.add(itemNotice,Integer.valueOf(250));layers.add(gameMenu,Integer.valueOf(300));layers.add(scene,Integer.valueOf(0));layers.add(notebook,Integer.valueOf(100));layers.add(toast,Integer.valueOf(200));add(layers);
   notebook.setLayout(new BorderLayout(0,16));notebook.setBorder(BorderFactory.createEmptyBorder(23,24,26,27));notebook.addMouseListener(new MouseAdapter(){});notebook.addMouseMotionListener(new MouseMotionAdapter(){});
   JPanel top=new JPanel(new BorderLayout(0,16));top.setOpaque(false);JPanel titleRow=new JPanel(new BorderLayout());titleRow.setOpaque(false);JLabel title=new JLabel("연구 노트");title.setFont(GameFonts.title(28));title.setForeground(NotebookStyle.INK);titleRow.add(title);JButton close=NotebookStyle.button("×",false);close.setPreferredSize(new Dimension(32,32));close.setToolTipText("연구 노트 닫기 (Esc)");close.addActionListener(e->closeNotebook());titleRow.add(close,BorderLayout.EAST);top.add(titleRow,BorderLayout.NORTH);
   JPanel tabs=new JPanel(new GridLayout(1,2,4,0));tabs.setOpaque(false);tabs.add(recordTab);tabs.add(inventoryTab);top.add(tabs);notebook.add(top,BorderLayout.NORTH);recordTab.addActionListener(e->openNotebook("records"));inventoryTab.addActionListener(e->openNotebook("inventory"));
@@ -53,5 +54,5 @@ public final class GameHud extends JPanel {
  }
  public void closeNotebook(){notebook.finishTurn();notebook.setVisible(false);noteButton.setSelected(false);noteButton.requestFocusInWindow();repaint();}
  public void showMessage(String value){missions.setLastMessage(value);toast.setText(value);toast.setVisible(true);toastTimer.restart();}
- public void removeNotify(){gameMenu.release();gameScene.setInputBlocked(false);notebook.finishTurn();toastTimer.stop();toast.setVisible(false);super.removeNotify();}
+ public void removeNotify(){itemNotice.clear();gameMenu.release();gameScene.setInputBlocked(false);notebook.finishTurn();toastTimer.stop();toast.setVisible(false);super.removeNotify();}
 }

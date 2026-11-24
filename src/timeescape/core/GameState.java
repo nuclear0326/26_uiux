@@ -8,6 +8,7 @@ public final class GameState {
     private final ProgressCatalog catalog;
     private final Set<String> completed = new HashSet<>();
     private final Set<String> items = new HashSet<>();
+    private final Set<String> unreadItems = new HashSet<>();
     private final Set<String> flags = new HashSet<>();
     private final Set<String> unlockedRooms = new HashSet<>();
     private String roomId;
@@ -24,6 +25,9 @@ public final class GameState {
     public Era era() { return catalog.rooms().get(roomId).era(); }
     public String locationTitle() { return catalog.rooms().get(roomId).title(); }
     public boolean has(String id) { return items.contains(id); }
+    public boolean isItemUnread(String id) { return unreadItems.contains(id); }
+    public boolean markItemRead(String id) { return unreadItems.remove(id); }
+    private void acquire(String id) { if(items.add(id)) unreadItems.add(id); }
     public boolean flag(String id) { return flags.contains(id); }
     public boolean roomUnlocked(String id) { return unlockedRooms.contains(id); }
     public boolean done(String id) {
@@ -49,7 +53,8 @@ public final class GameState {
     private void apply(ProgressCatalog.Step step) {
         if (!completed.add(step.id())) return;
         items.removeAll(step.consume());
-        items.addAll(step.grant());
+        unreadItems.removeAll(step.consume());
+        step.grant().forEach(this::acquire);
         flags.addAll(step.flags());
         unlockedRooms.addAll(step.unlock());
     }
@@ -68,7 +73,7 @@ public final class GameState {
         if (!roomId.equals(item.room()) || !completed.containsAll(item.requires()))
             throw new IllegalStateException("이 장소에서 아직 획득할 수 없는 아이템입니다: " + id);
         if (!item.blockedBy().isBlank() && completed.contains(item.blockedBy())) return;
-        items.add(id);
+        acquire(id);
         settleAutomaticSteps();
     }
     public boolean canEnter(String destination) {
@@ -111,17 +116,18 @@ public final class GameState {
 
     /** Detached ID-based snapshot for inspection and save-file persistence. */
     public record Snapshot(int schemaVersion, String roomId, Set<String> completed,
-                           Set<String> items, Set<String> flags, Set<String> unlockedRooms) {
+                           Set<String> items, Set<String> flags, Set<String> unlockedRooms, Set<String> unreadItems) {
+        public Snapshot(int version,String room,Set<String> completed,Set<String> items,Set<String> flags,Set<String> rooms) { this(version,room,completed,items,flags,rooms,Set.of()); }
         public Snapshot {
             completed = Set.copyOf(completed); items = Set.copyOf(items);
-            flags = Set.copyOf(flags); unlockedRooms = Set.copyOf(unlockedRooms);
+            flags = Set.copyOf(flags); unlockedRooms = Set.copyOf(unlockedRooms); unreadItems = Set.copyOf(unreadItems);
         }
     }
-    public Snapshot snapshot() { return new Snapshot(1,roomId,completed,items,flags,unlockedRooms); }
+    public Snapshot snapshot() { return new Snapshot(2,roomId,completed,items,flags,unlockedRooms,unreadItems); }
 
     /** Restore values directly: never replay rewards, consumption or completion callbacks. */
     public static GameState restore(ProgressCatalog catalog, Snapshot snapshot) {
-        if (snapshot.schemaVersion() != 1) throw new IllegalArgumentException("Unsupported save version");
+        if (snapshot.schemaVersion() != 1 && snapshot.schemaVersion() != 2) throw new IllegalArgumentException("Unsupported save version");
         if (!catalog.rooms().containsKey(snapshot.roomId())
             || !snapshot.unlockedRooms().contains(snapshot.roomId())
             || !snapshot.unlockedRooms().contains(catalog.initialRoom())
@@ -129,6 +135,7 @@ public final class GameState {
             || !catalog.steps().keySet().containsAll(snapshot.completed())
             || !catalog.items().keySet().containsAll(snapshot.items()))
             throw new IllegalArgumentException("Save references unavailable content");
+        if (!snapshot.items().containsAll(snapshot.unreadItems()) || (snapshot.schemaVersion()==1 && !snapshot.unreadItems().isEmpty())) throw new IllegalArgumentException("Invalid unread items");
         Set<String> knownFlags = new HashSet<>();
         for (var step : catalog.steps().values()) knownFlags.addAll(step.flags());
         if (!knownFlags.containsAll(snapshot.flags())) throw new IllegalArgumentException("Unknown environment state");
@@ -136,6 +143,7 @@ public final class GameState {
         result.roomId = snapshot.roomId();
         result.completed.clear(); result.completed.addAll(snapshot.completed());
         result.items.clear(); result.items.addAll(snapshot.items());
+        result.unreadItems.clear(); result.unreadItems.addAll(snapshot.unreadItems());
         result.flags.clear(); result.flags.addAll(snapshot.flags());
         result.unlockedRooms.clear(); result.unlockedRooms.addAll(snapshot.unlockedRooms());
         return result;

@@ -49,8 +49,9 @@ public final class SaveStore {
         try {
             Properties p=new Properties();
             try (Reader reader=Files.newBufferedReader(path,StandardCharsets.UTF_8)) { p.load(reader); }
-            var snapshot=new GameState.Snapshot(Integer.parseInt(required(p,"schemaVersion")),
-                required(p,"roomId"),ids(p,"completed"),ids(p,"items"),ids(p,"flags"),ids(p,"unlockedRooms"));
+            int version=Integer.parseInt(required(p,"schemaVersion"));
+            var snapshot=new GameState.Snapshot(version,
+                required(p,"roomId"),ids(p,"completed"),ids(p,"items"),ids(p,"flags"),ids(p,"unlockedRooms"),version>=2?ids(p,"unreadItems"):Set.of());
             if (!digest(payload(snapshot)).equals(required(p,"checksum"))) throw new IOException("Save checksum mismatch");
             return GameState.restore(catalog,snapshot);
         } catch (IllegalArgumentException e) { throw new IOException("Invalid or incompatible save",e); }
@@ -86,7 +87,8 @@ public final class SaveStore {
     }
     private static String payload(GameState.Snapshot s) {
         return "schemaVersion="+s.schemaVersion()+"\nroomId="+s.roomId()+"\ncompleted="+joined(s.completed())
-            +"\nitems="+joined(s.items())+"\nflags="+joined(s.flags())+"\nunlockedRooms="+joined(s.unlockedRooms())+"\n";
+            +"\nitems="+joined(s.items())+"\nflags="+joined(s.flags())+"\nunlockedRooms="+joined(s.unlockedRooms())+"\n"
+            +(s.schemaVersion()>=2?"unreadItems="+joined(s.unreadItems())+"\n":"");
     }
     private static String joined(Set<String> values) { return String.join(",",new TreeSet<>(values)); }
     private static String required(Properties p,String key) {

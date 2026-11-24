@@ -40,6 +40,17 @@ final class PuzzleChrome {
   JTextArea help=new JTextArea(text(instructions));help.setFont(GameFonts.body(15));help.setForeground(LabTheme.TEXT);help.setEditable(false);help.setFocusable(false);help.setOpaque(false);help.setLineWrap(true);help.setWrapStyleWord(true);help.setRows(2);help.setBorder(BorderFactory.createEmptyBorder(7,0,0,0));header.add(help,BorderLayout.CENTER);
   return header;
  }
- static void styleButton(JButton b){b.setFont(GameFonts.button(15));b.setForeground(LabTheme.TEXT);b.setBackground(LabTheme.PANEL);b.setOpaque(true);b.setFocusPainted(false);b.setCursor(GameCursors.interact());b.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(LabTheme.LINE),BorderFactory.createEmptyBorder(10,13,10,13)));}
+ static void styleButton(JButton b){
+  b.setFont(GameFonts.button(15));b.setForeground(LabTheme.TEXT);b.setBackground(LabTheme.PANEL);b.setOpaque(false);b.setContentAreaFilled(false);b.setFocusPainted(false);b.setRolloverEnabled(true);b.setCursor(GameCursors.interact());
+  b.setBorder(BorderFactory.createEmptyBorder(11,14,11,14));
+  b.setUI(new javax.swing.plaf.basic.BasicButtonUI(){
+   public void paint(Graphics raw,JComponent c){JButton button=(JButton)c;Graphics2D g=(Graphics2D)raw.create();LabTheme.quality(g);
+    boolean enabled=button.isEnabled();g.setColor(enabled?(button.getModel().isPressed()?new Color(56,65,62):button.getModel().isRollover()?new Color(48,57,54):new Color(29,37,39)):new Color(25,30,31));g.fillRoundRect(0,0,c.getWidth(),c.getHeight(),8,8);
+    g.setColor(enabled?LabTheme.GOLD:new Color(86,94,93));g.drawRoundRect(1,1,c.getWidth()-3,c.getHeight()-3,8,8);
+    g.setFont(button.getFont());g.setColor(enabled?new Color(245,237,218):new Color(164,172,169));LabTheme.center(g,button.getText(),c.getWidth()/2,(c.getHeight()-g.getFontMetrics().getHeight())/2+g.getFontMetrics().getAscent());
+    if(button.isFocusOwner()){g.setColor(LabTheme.TEXT);g.drawRoundRect(4,4,c.getWidth()-9,c.getHeight()-9,5,5);}g.dispose();
+   }
+  });
+ }
  static void bindClose(JRootPane root,Runnable close){root.registerKeyboardAction(e->close.run(),KeyStroke.getKeyStroke("ESCAPE"),JComponent.WHEN_IN_FOCUSED_WINDOW);}
 }
