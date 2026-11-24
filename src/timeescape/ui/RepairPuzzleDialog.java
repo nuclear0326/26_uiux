@@ -24,7 +24,7 @@ public final class RepairPuzzleDialog extends JDialog {
         setCursor(GameCursors.normal());setUndecorated(true);setDefaultCloseOperation(DISPOSE_ON_CLOSE);setSize(1000,820);setMinimumSize(new Dimension(900,760));setLocationRelativeTo(owner);
         content=factory.create(this::finish,this::dispose);setContentPane(content);PuzzleChrome.bindClose(getRootPane(),this::dispose);
         DeveloperMode.bind(getRootPane(),content::developerSkip);
-        if(DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Ctrl+Shift+F10 단계 스킵]");
+        if(DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Shift+8+9+0 단계 스킵]");
         GameAudio.get().puzzle(true);
         addWindowListener(new WindowAdapter(){@Override public void windowClosed(WindowEvent e){GameAudio.get().puzzle(false);}});
     }

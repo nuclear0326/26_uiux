@@ -1,3 +1,10 @@
+# v69
+- Remove Ctrl+Shift+F10 binding. Shift+8+9+0 now uses stage skip: easy to hard, then complete.
+- Preserve normal completion and prevent held-key multi-stage skipping.
+
+# v68
+- Add temporary focused-puzzle Shift+8+9+0 completion chord, including whole wire puzzle.
+
 # v67
 - Persist unread item IDs in schema 2, with legacy schema 1 loading.
 - Autosave after hover acknowledgement; restore per-slot read states without replaying pickup effects.

@@ -22,8 +22,8 @@ $weatherSources = @(Get-ChildItem (Join-Path $PSScriptRoot 'weather') -Filter *.
 if ($LASTEXITCODE -ne 0) { throw 'Weather tools compilation failed' }
 & "$JavaHome\bin\java.exe" '-Djava.awt.headless=true' -cp "$weatherClasses;$classes;$root\src" timeescape.ui.GenerateMenuWeather "$root\src\assets"
 if ($LASTEXITCODE -ne 0) { throw 'Weather asset generation failed' }
-& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v67.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
+& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v69.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
-Write-Output "Built $build\uix_v67.jar"
+Write-Output "Built $build\uix_v69.jar"
 
 

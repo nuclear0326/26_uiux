@@ -97,7 +97,7 @@ ID는 표시 순서와 다릅니다. order를 바꾸더라도 ID는 유지합니
 - 기존 PuzzleRunner는 모달 창이 닫힌 후 결과를 받습니다. 창만 비동기로 띄우고 바로 결과를 반환하지 마세요.
 - setUndecorated(true)는 창이 표시되기 전에 호출합니다.
 - 자체 닫기 버튼과 Esc를 연결합니다. System.exit()는 사용하지 않습니다.
-- DeveloperMode.bind()를 사용하면 개발 모드에서 Ctrl+Shift+F10을 연결할 수 있습니다. 일반 배포에서 무조건 정답 처리하지 않습니다.
+- DeveloperMode.bind()는 임시 개발 빌드의 Shift+8+9+0을 연결합니다. 배선 퍼즐은 단계별 스킵을 사용합니다. 정식 배포 전 TEMPORARY_PUZZLE_CHEAT를 false로 변경하세요.
 
 현재 RepairPuzzlePanel.build()는 시계 제목 여부에 따라 과거/미래 설명을 선택합니다. 새 퍼즐에 그대로 상속하면 잘못된 부제목이 나올 수 있습니다. 예제는 이 부분을 복사하지 않고 PuzzleChrome을 직접 사용합니다. 기존 수리 패널을 확장하려면 통합 담당자가 context를 인자로 받도록 일반화한 뒤 사용하세요.
 

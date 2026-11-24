@@ -77,7 +77,7 @@ public final class ComputerPuzzleDialog extends JDialog {
             if(finished)return;
             finished=true;result=PuzzleResult.SOLVED;dispose();
         });
-        if(timeescape.system.DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Ctrl+Shift+F10 스킵]");
+        if(timeescape.system.DeveloperMode.isEnabled())setTitle(getTitle()+" [개발 모드: Shift+8+9+0 스킵]");
         refreshStatus("파일 블록을 밀어 SYS.CFG를 오른쪽 전송 포트로 내보내세요.");
         GameAudio.get().puzzle(true);
         addWindowListener(new java.awt.event.WindowAdapter() {

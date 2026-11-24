@@ -1,18 +1,2 @@
-import javax.swing.*;
-import timeescape.system.DeveloperMode;
-public class VerifyDeveloperMode {
- public static void main(String[] args)throws Exception{
-  SwingUtilities.invokeAndWait(()->{
-   int[] count={0};JRootPane pane=new JRootPane();DeveloperMode.bind(pane,()->count[0]++);
-   Object key=pane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).get(KeyStroke.getKeyStroke("ctrl shift F10"));
-   if(!"developerSkip".equals(key)||DeveloperMode.isEnabled())throw new AssertionError("default/binding");
-   Action action=pane.getActionMap().get(key);action.actionPerformed(null);
-   if(count[0]!=0)throw new AssertionError("skip enabled by default");
-   DeveloperMode.setEnabled(true);action.actionPerformed(null);
-   if(count[0]!=1)throw new AssertionError("skip disabled");
-   DeveloperMode.setEnabled(false);action.actionPerformed(null);
-   if(count[0]!=1)throw new AssertionError("disable ignored");
-  });
-  System.out.println("Developer skip: default off, shortcut, enabled callback and disable passed.");
- }
-}
+import javax.swing.*;import timeescape.system.DeveloperMode;
+public class VerifyDeveloperMode {public static void main(String[] args)throws Exception{SwingUtilities.invokeAndWait(()->{for(boolean enabled:new boolean[]{false,true}){DeveloperMode.setEnabled(enabled);JRootPane root=new JRootPane();DeveloperMode.bind(root,()->{throw new AssertionError("unexpected dispatch");});if(root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).get(KeyStroke.getKeyStroke("ctrl shift F10"))!=null||root.getActionMap().get("developerSkip")!=null)throw new AssertionError("old F10 mapping remains");if(!Boolean.TRUE.equals(root.getClientProperty("temporaryPuzzleCheat")))throw new AssertionError("new chord not installed");}DeveloperMode.setEnabled(false);});System.out.println("PASS old F10 mapping absent with developer mode both on/off; new chord installed; no window.");}}
