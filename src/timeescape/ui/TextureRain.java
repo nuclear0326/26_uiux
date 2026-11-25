@@ -23,7 +23,7 @@ final class TextureRain {
    }
   }catch(java.io.IOException e){throw new IllegalStateException("Cannot load precomputed menu rain",e);}
  }
- void draw(Graphics2D g,double t){
+ void updateDelta(double t){
   java.util.Arrays.fill(delta,0);int active=0;
   for(double[] event:events){
    double age=((t-event[0])%cycleSeconds+cycleSeconds)%cycleSeconds,duration=event[4];if(age<0||age>duration)continue;active++;
@@ -39,6 +39,43 @@ final class TextureRain {
    }
   }
 
+ }
+ /** Distant glass: subdued small heads and longer narrow wet trails.
+  * Some drops gather before sliding; density is five staggered streams. */
+ void updateDistantDelta(double t){
+  java.util.Arrays.fill(delta,0);
+  double size=.55;
+  for(int stream=0;stream<5;stream++)for(double[] event:events){
+   int x0=(int)event[1],y0=(int)event[2];
+   double hold=(Math.floorMod(x0+y0+stream,3)==0)?.28:0;
+   double duration=event[4]+hold;
+   double age=((t+stream*17.3-event[0])%cycleSeconds+cycleSeconds)%cycleSeconds;
+   if(age>duration)continue;
+   double envelope=Math.min(1,age/.20)*Math.min(1,(duration-age)/.28);
+   double moving=Math.max(0,age-hold);
+   double startY=10+Math.floorMod(y0+stream*73,285);
+   double travel=event[3]*1.5*(moving-.12*(1-Math.exp(-moving/.12)));
+   double trailLength=Math.min(travel,38+Math.floorMod(x0+y0,19));
+   for(int dy=-6;dy<=6;dy++)for(int dx=-4;dx<=4;dx++){
+    double taper=Math.pow(Math.max(0,1-dx*dx/25.),.7)*Math.max(0,1-dy*dy/49.);
+    double value=detail[(y0+dy)*W+x0+dx]*taper*envelope*size*size;
+    double y=startY+dy*size*1.35;
+    double pointWidth=.65*Math.max(.20,1-Math.abs(dy)/8.0);
+    depositXY(x0+dx*size*pointWidth,y+travel,value*.70);
+    // Tail length is independent of head scale; it narrows and fades toward its origin.
+    for(int tail=1;tail<=trailLength;tail++){
+     double fade=1-tail/trailLength;
+     depositXY(x0+dx*size*.32*(.20+.80*fade),y+travel-tail,value*.10*fade);
+    }
+   }
+  }
+ }
+ private void depositXY(double x,double y,double value){
+  int ix=(int)Math.floor(x);if(ix<0||ix+1>=W)return;double fraction=x-ix;
+  deposit(ix,y,value*(1-fraction));deposit(ix+1,y,value*fraction);
+ }
+ void draw(Graphics2D g,double t){
+  updateDelta(t);
   for(int y=0;y<H;y++)for(int x=770;x<W-10;x++){
    int i=y*W+x;float w=weight[i];if(w<=0)continue;
    double change=delta[i]*w;int c=source[i];

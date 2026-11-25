@@ -1,3 +1,61 @@
+## v79 rain tuning
+
+- Build, menu parity, lower-pane coverage and 12 weather checks passed. Rendered production HUD headlessly; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature verified.
+
+## v78 rain tuning
+
+- Build, menu parity, lower-pane coverage and 12 weather checks passed. Rendered production HUD headlessly; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature verified.
+
+## v77 rain tuning
+
+- Build, menu parity, lower-pane coverage and 12 weather checks passed. Rendered production HUD headlessly; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature verified.
+
+## v76 rain tuning
+
+- Build, menu parity, lower-pane coverage and 12 weather checks passed. Rendered production HUD headlessly; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature verified.
+
+## v75 rain tuning
+
+- Build, menu parity, lower-pane coverage and 12 weather checks passed. Rendered production HUD headlessly; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature verified.
+
+## v74 rain coverage
+
+- Java 21 build passed. VerifyRainCoverage74 confirmed menu pixel equality at six timestamps and visible rain in all three exposed lower window areas.
+- Existing 12 weather checks passed. Production HUD/scene rendered headlessly to GIF; game and audio not launched.
+- ZIP CRC, packaged JAR equality and launcher signature passed.
+
+## v73 distant rain
+
+- Java 21 build passed. Menu parity passed at six timestamps; all three lab panes show rain.
+- Existing 12 weather checks passed. Actual GameHud/GameScenePanel rendered headlessly to GIF, including lightning. No game window or audio launched.
+- Windows ZIP CRC, JAR equality and launcher signature verified.
+
+## v72 three-window menu rain
+
+- Java 21 compile/package passed. VerifyMenuRainParity72: menu pixel equality at six timestamps through one hour; rain visible in all three laboratory bays.
+- VerifyLabWeather72: 12 checks passed for window clipping, foreground exclusions, hidden timer state and other-era stability.
+- Rendered actual GameHud/GameScenePanel with production rain and lightning to a 96-frame GIF; no game window/EXE/audio launched.
+- ZIP CRC, embedded JAR equality and EXE signature verified. Actual OS rendering/performance remains untested.
+
+## v71 precomputed laboratory weather
+
+- Java 21 build passed. GenerateLabWeather produced 284 paths and approximately 1.05 MB of compressed rain/lightning assets.
+- VerifyLabWeather71 passed 12367 assertions, including per-path boundary checks, rain visibility, masking, hidden timers and other-era stability.
+- Rendered full-scene 1280x720 GIF and power-off/alternate-aspect PNGs headlessly. No game window, EXE or audio playback launched.
+- ZIP CRC, packaged JAR equality and launcher MZ signature passed. No end-to-end startup speed claim; desktop playback not tested.
+
+## v70 present laboratory weather
+
+- Build: Java 21 compilation and packaging passed.
+- VerifyLabWeather70: 12 assertions passed, covering window masking, foreground exclusions, other-era rendering and hidden timer state.
+- Headless previews: 16:9 animation, 16:10, ultrawide and unpowered laboratory rendered without opening a game window or playing audio.
+- Windows ZIP CRC, packaged JAR equality and launcher signature passed. Actual desktop playback and sound were not run.
+
 # v69
 210 stage/normal-completion checks, 97 chord checks, 63 runner checks, 45 save checks passed. F10 mapping absent in both developer-mode states. No game window, audio or EXE launched.
 

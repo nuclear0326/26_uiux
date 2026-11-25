@@ -1,3 +1,53 @@
+## v79
+
+- Narrowed and tapered droplet heads with 1.35x vertical elongation, sharpened tapered tails and increased frequency from four to five streams. Preserved gathering, 1.5x terminal speed, window masking and lightning.
+
+## v78
+
+- Integrated approved visibility tuning: head brightness 80%, tail contribution 0.12 with 38-56px length. Retained 55% head size, four streams, gathering/acceleration, lower-window coverage and 1.5x terminal speed.
+
+## v77
+
+- Reduced head brightness to 58%, separated 28-42px tapered tails from 55% head size, added gathering/acceleration, and reduced density to four streams. Retained lower-window coverage and 1.5x terminal speed.
+
+## v76
+
+- Set laboratory rain to seven staggered event streams (7x baseline frequency). Retained 55% size, 1.5x speed and lower-window coverage.
+
+## v75
+
+- Set lab droplets to 55% linear size and 1.5x original speed. Four event streams and lower-window coverage retained.
+
+## v74
+
+- Set lab droplets to 40% linear size, four staggered event streams and 2x original travel speed.
+- Distributed starting heights and removed the menu-specific destination mask; the laboratory mask alone clips frames and foreground objects.
+- Original menu effect and laboratory lightning unchanged.
+
+## v73
+
+- Laboratory droplets use 65% linear size and travel distance, with two staggered event streams (17.3-second offset). Original menu rain is unchanged.
+- Both streams share the existing per-pane compositing pass; frames and room objects remain masked.
+
+## v72
+
+- Laboratory rain now reuses the actual TextureRain menu engine and precomputed menu data in three individually scaled bays, with 0/1.7/3.4 second phase offsets.
+- Uniform XY scaling preserves droplet proportions; source-photo removal is excluded so unrelated laboratory pixels are not darkened.
+- Preserved laboratory lightning, power state and object masks.
+
+## v71
+
+- Replaced procedural lab rain lines with original-photo highlight sprites and 284 build-time generated, single-pane paths.
+- Added acceleration, staggered timing and fade before pane boundaries.
+- Generated textured lightning assets for powered and unpowered backgrounds; menu visuals and thunder timing unchanged.
+- Runtime loads prepared assets and draws small sprites; no background analysis or full-frame rain pixel loop.
+
+## v70
+
+- Added rain and window-only lightning to the present laboratory. Pane masks follow the photograph and exclude frames and foreground objects.
+- Reuses the menu lightning envelope and 1.2-second thunder delay. Weather stops when the scene is hidden or another era is selected.
+- Verified headlessly without starting the game.
+
 # v69
 - Remove Ctrl+Shift+F10 binding. Shift+8+9+0 now uses stage skip: easy to hard, then complete.
 - Preserve normal completion and prevent held-key multi-stage skipping.

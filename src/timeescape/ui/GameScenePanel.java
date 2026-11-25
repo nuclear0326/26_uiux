@@ -42,6 +42,32 @@ public final class GameScenePanel extends JPanel {
     private static final int IMAGE_H = 1080;
     private final timeescape.system.ScaledBackground backgroundCache = new timeescape.system.ScaledBackground();
     private final timeescape.system.ScaledBackground offBackgroundCache = new timeescape.system.ScaledBackground();
+    private final LabWindowWeather windowWeather = new LabWindowWeather();
+    private final Timer weatherTimer = new Timer(33, e -> updateWeather());
+    private long weatherTick;
+    private double weatherSeconds, lightningAt=-100, nextLightning=12, thunderDue=-1;
+    private int stormNumber;
+    private void syncWeather() {
+        if(isShowing() && era==Era.PRESENT) {
+            if(!weatherTimer.isRunning()) { weatherTick=System.nanoTime(); weatherTimer.start(); }
+        } else {
+            weatherTimer.stop(); weatherTick=0; thunderDue=-1; lightningAt=-100;
+            nextLightning=weatherSeconds+12;
+        }
+    }
+    private void updateWeather() {
+        if(!isShowing() || era!=Era.PRESENT) { syncWeather(); return; }
+        long now=System.nanoTime();
+        weatherSeconds+=Math.min(.1,(now-weatherTick)/1_000_000_000.0); weatherTick=now;
+        if(weatherSeconds>=nextLightning) {
+            lightningAt=weatherSeconds; thunderDue=weatherSeconds+1.2;
+            nextLightning=weatherSeconds+18+(stormNumber++*7%13);
+        }
+        if(thunderDue>=0 && weatherSeconds>=thunderDue) {
+            thunderDue=-1; timeescape.system.GameAudio.get().play("menu_thunder");
+        }
+        repaint();
+    }
     private boolean powered;
     private boolean inputBlocked;
     public void setInputBlocked(boolean value){inputBlocked=value;if(value)clearHighlights();}
@@ -132,6 +158,7 @@ public final class GameScenePanel extends JPanel {
 
     @Override public void addNotify() {
         super.addNotify();
+        syncWeather();
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
             .addPropertyChangeListener("focusedWindow", windowFocusListener);
     }
@@ -143,6 +170,7 @@ public final class GameScenePanel extends JPanel {
         finishLighting();
         backgroundCache.clear();
         offBackgroundCache.clear();
+        weatherTimer.stop(); weatherTick=0; thunderDue=-1;
         super.removeNotify();
     }
 
@@ -167,7 +195,10 @@ public final class GameScenePanel extends JPanel {
         });
 
         addHierarchyListener(e -> {
-            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && !isShowing()) { clearHighlights(); finishLighting(); }
+            if ((e.getChangeFlags() & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0) {
+                syncWeather();
+                if(!isShowing()) { clearHighlights(); finishLighting(); }
+            }
         });
         MouseAdapter mouse = new MouseAdapter() {
             @Override public void mouseMoved(MouseEvent e) {
@@ -223,6 +254,7 @@ public final class GameScenePanel extends JPanel {
     public void setEra(Era next) {
         if (this.era != next) {
             this.era = next;
+            syncWeather();
             if (next != Era.PRESENT) finishLighting();
             revealHeld = false;
             revealContrast = 0f;
@@ -328,6 +360,7 @@ public final class GameScenePanel extends JPanel {
         overlay.translate(r.x, r.y);
         overlay.scale(r.width / (double) IMAGE_W, r.height / (double) IMAGE_H);
         overlay.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        if(era==Era.PRESENT) windowWeather.draw(overlay,weatherSeconds,weatherSeconds-lightningAt,lightLevel);
         paintContrast(overlay);
         if (revealContrast > 0) {
             for (Hotspot zone : HotspotCatalog.of(era)) if(hint(zone)==timeescape.scene.InteractionHint.READY) paintParticles(overlay, zone, revealContrast);
