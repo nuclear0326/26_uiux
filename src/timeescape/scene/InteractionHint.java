@@ -8,6 +8,11 @@ public enum InteractionHint {
     NONE, LATER, READY;
 
     public static InteractionHint of(GameState state, String object) {
+        if (state.introPresent()) {
+            if (object.equals("CASE")) return state.has("DEVICE") ? NONE : READY;
+            if (object.equals("POWER")) return NONE;
+            return NONE;
+        }
         boolean powered = state.era()!=Era.PRESENT || state.powered() || object.equals("POWER");
         var item=state.catalog().items().get(object);
         if(item!=null && item.room().equals(state.roomId())) {

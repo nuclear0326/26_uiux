@@ -270,10 +270,7 @@ public final class GameScenePanel extends JPanel {
     }
 
     private Rectangle displayRect() {
-        double scale = Math.max((double) getWidth() / IMAGE_W, (double) getHeight() / IMAGE_H);
-        int w = (int) Math.round(IMAGE_W * scale);
-        int h = (int) Math.round(IMAGE_H * scale);
-        return new Rectangle((getWidth() - w) / 2, (getHeight() - h) / 2, w, h);
+        return SceneViewport.cover(getWidth(), getHeight());
     }
 
     private Hotspot hitTest(Point p) {

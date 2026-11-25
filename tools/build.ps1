@@ -26,8 +26,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Clock fracture generation failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Weather asset generation failed' }
 & "$JavaHome\bin\java.exe" '-Djava.awt.headless=true' -cp "$weatherClasses;$classes;$root\src" timeescape.ui.GenerateLabWeather "$root\src\assets"
 if ($LASTEXITCODE -ne 0) { throw 'Lab weather generation failed' }
-& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v82.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
+& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v89.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
-Write-Output "Built $build\uix_v82.jar"
+Write-Output "Built $build\uix_v89.jar"
 
 

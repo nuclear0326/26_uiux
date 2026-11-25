@@ -10,9 +10,12 @@ public final class PresentPuzzlePanel extends JPanel {
     private final JLabel status=new JLabel();
     private final JPanel instruments=new JPanel();
     public PresentPuzzlePanel(String id,Runnable onSolved,Runnable onClose){
+        this(id,onSolved,onClose,"현재 / 연구실");
+    }
+    public PresentPuzzlePanel(String id,Runnable onSolved,Runnable onClose,String context){
         super(new BorderLayout(0,18));puzzle=PresentPuzzles.create(id);
         PuzzleChrome.decorate(this);
-        add(PuzzleChrome.header(puzzle.title(),"현재 / 연구실",puzzle.instruction(),onClose),BorderLayout.NORTH);
+        add(PuzzleChrome.header(puzzle.title(),context,puzzle.instruction(),onClose),BorderLayout.NORTH);
         instruments.setOpaque(false);instruments.setLayout(id.equals("PZ008")?new GridLayout(2,2,14,14):new GridLayout(1,puzzle.size(),12,12));add(instruments,BorderLayout.CENTER);
         JPanel bottom=new JPanel(new BorderLayout(8,12));bottom.setOpaque(false);status.setFont(GameFonts.body(15));status.setForeground(LabTheme.GREEN);bottom.add(status,BorderLayout.NORTH);
         JPanel actions=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));actions.setOpaque(false);

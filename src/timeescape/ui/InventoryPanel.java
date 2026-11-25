@@ -38,7 +38,7 @@ public final class InventoryPanel extends JPanel implements Scrollable {
   g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
   g.drawImage(icon,x-12,y-22,90,90,null);
  }
- public void refresh(GameState s,boolean selected){syncItems(s);removeAll();if(s.done("PZ010"))item("손목 시간여행 장치","시간 이동 및 장치 수리. 클릭해서 엽니다.","DEVICE",false);
+ public void refresh(GameState s,boolean selected){syncItems(s);removeAll();if(s.has("DEVICE"))item("손목 시간여행 장치",s.introPresent()?"상자에서 꺼낸 시제품. 클릭해 사용 화면을 엽니다.":s.flag("device_broken")?"이동 중 고장난 장치. 클릭해서 상태를 확인합니다.":"시간 이동 및 장치 수리. 클릭해서 엽니다.","DEVICE",false);
   if(s.hasSparePart())item("대체 부품",selected?"선택됨. 손목 장치를 열어 수리하세요.":"과거에서 얻은 부품. 클릭해 수리에 사용할 부품을 선택합니다.","SPARE",selected);
   if(s.hasCorePart())item("미래 핵심 부품","손목 장치의 최종 수리에 사용하는 핵심 부품입니다.","CORE",false);
   if(s.has("USB"))item(s.usbComplete()?"연구 데이터 USB":"빈 USB",s.usbComplete()?"연구 기록이 저장된 장치. 미래에서 사용할 수 있습니다.":"컴퓨터에서 복구한 연구 데이터를 복사할 저장 매체입니다.","USB",false);

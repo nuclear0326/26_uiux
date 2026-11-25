@@ -87,7 +87,7 @@ final class GameMenuOverlay extends JPanel {
     void showPage(String next){if(busy)return;long revision=++pageRevision;page=next;newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();
         switch(next){
             case "newgame"->{title.setText("새 게임을 시작할까요?");option("취소","cancel-newgame",close);option("시작","confirm-newgame",()->{if(!isVisible())return;close.run();newGame.run();});}
-            case "help"->{title.setText("조작 도움말");option("닫기","help-close",close);}
+            case "help"->{title.setText("조작 도움말");information.setText("<html><div style='text-align:center'>?버튼을 클릭시 조작 도움말을<br>다시 볼 수 있습니다.</div></html>");option("닫기","help-close",close);}
             case "save","load","ingameload"->{
                 boolean saving=next.equals("save");title.setText(saving?"저장":next.equals("ingameload")?"불러오기":"이어하기");
                 information.setText(saving?"자동저장은 자동 갱신 · 저장소를 눌러 저장":"불러올 저장소를 선택하세요");
@@ -178,6 +178,7 @@ final class GameMenuOverlay extends JPanel {
         int titleSize=(page.equals("reset")||page.equals("overwrite"))?26:Math.min(48,w/11);title.setFont(GameFonts.title(titleSize));title.setBounds(panel.x+24,panel.y+42,w-48,66);dismiss.setFont(GameFonts.button(30));dismiss.setBounds(panel.x+w-57,panel.y+15,40,40);
         information.setBounds(panel.x+20,panel.y+108,w-40,24);
         if(page.equals("help")){
+            information.setBounds(panel.x+20,panel.y+108,w-40,42);
             helpContent.setBounds(panel.x+40,panel.y+158,w-80,h-238);
             JButton closeButton=options.get(0);closeButton.setFont(GameFonts.button(24));closeButton.setBounds(panel.x+30,panel.y+h-70,w-60,40);
             return;
@@ -198,7 +199,7 @@ final class GameMenuOverlay extends JPanel {
         g.setColor(new Color(0,0,0,30));g.fillRoundRect(panel.x-3,panel.y+5,panel.width+6,panel.height+4,24,24);
         g.setColor(new Color(5,7,9,199));g.fillRoundRect(panel.x,panel.y,panel.width,panel.height,20,20);
         g.setColor(new Color(151,151,145,90));g.drawRoundRect(panel.x,panel.y,panel.width-1,panel.height-1,20,20);
-        g.setColor(new Color(155,155,148,150));int ruleY=panel.y+(page.equals("newgame")?88:137);g.drawLine(panel.x+panel.width/6,ruleY,panel.x+panel.width*5/6,ruleY);
+        g.setColor(new Color(155,155,148,150));int ruleY=panel.y+(page.equals("newgame")?88:page.equals("help")?154:137);g.drawLine(panel.x+panel.width/6,ruleY,panel.x+panel.width*5/6,ruleY);
         if((page.equals("save")||page.equals("load")||page.equals("ingameload"))&&options.size()>2){
             JButton auto=options.get(0);int y=auto.getY()+auto.getHeight()+8,cx=panel.x+panel.width/2;
             g.setColor(new Color(190,179,157,160));g.setStroke(new BasicStroke(1.2f));g.drawLine(cx-38,y,cx+38,y);

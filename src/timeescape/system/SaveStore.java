@@ -31,8 +31,11 @@ public final class SaveStore {
         String override = System.getProperty("timeescape.saveDir");
         if (override != null && !override.isBlank()) return Path.of(override);
         String local = System.getenv("LOCALAPPDATA");
-        return (local == null || local.isBlank() ? Path.of(System.getProperty("user.home"),".timeescape")
+        Path base = (local == null || local.isBlank() ? Path.of(System.getProperty("user.home"),".timeescape")
             : Path.of(local,"TimeEscape")).resolve("save");
+        // A new packaged release starts fresh; repeated launches keep that release's slots.
+        String release = System.getProperty("jpackage.app-version", "");
+        return release.matches("[0-9]+(?:\\.[0-9]+)*") ? base.resolve("v"+release) : base;
     }
     public Path file() { return file; }
     public boolean exists() { return Files.exists(file) || Files.exists(backup); }

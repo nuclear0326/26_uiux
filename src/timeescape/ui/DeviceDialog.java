@@ -21,6 +21,7 @@ public final class DeviceDialog extends JDialog {
     private final GameState state;
     private final boolean spareSelected;
     private final Runnable onChange;
+    private Runnable introTravel;
 
     public DeviceDialog(Frame owner, GameState state, boolean spareSelected, Runnable onChange) {
         super(owner, "손목 시간여행 장치", true);
@@ -32,6 +33,11 @@ public final class DeviceDialog extends JDialog {
         setLocationRelativeTo(owner);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         init();
+    }
+
+    public DeviceDialog(Frame owner, GameState state, boolean spareSelected, Runnable onChange, Runnable introTravel) {
+        this(owner,state,spareSelected,onChange);
+        this.introTravel=introTravel;
     }
 
     private void init() {
@@ -63,6 +69,7 @@ public final class DeviceDialog extends JDialog {
         JButton action = new JButton(actionName());
         action.setEnabled(isActionEnabled());
         action.addActionListener(e -> {
+            if (state.introPresent() && introTravel != null) { dispose(); introTravel.run(); return; }
             execute();
             dispose();
             onChange.run();
@@ -73,6 +80,10 @@ public final class DeviceDialog extends JDialog {
     }
 
     private String describe() {
+        if(state.prototypeFailed() && state.era()==Era.PAST) return "과거 좌표 이동 완료\n\n수리한 장치로 과거 연구실에 도착했습니다. 연구실을 조사해 다음 단서를 찾으세요.";
+        if (state.introPresent()) return "장치 상태: 시험 작동 대기\n\n상자에서 꺼낸 시간이동장치입니다. 사용 버튼을 눌러 시험 작동을 시작하세요.";
+        if(state.prototypeFailed() && state.era()==Era.PRESENT) return state.canDepart()?"로그 분석 및 장치 수리 완료\n\n과거 좌표로 이동할 준비가 되었습니다.":"장치 상태: 시험 작동 실패\n현재 위치: 현재 연구실\n\n전원을 복구하고 컴퓨터의 사고 로그를 확보한 뒤 작업대에서 장치를 수리하세요.";
+        if (state.firstTravelComplete()) return "장치 상태: 이동 중 고장\n도착 시점: 과거\n\n설정과 다른 시간에 도착했습니다. 이동 기능이 손상되어 장치 수리가 필요합니다.";
         if (state.era() == Era.PRESENT) {
             return "USB 확보: " + (state.usbComplete() ? "완료" : "미완료")
                 + "\n장치 제작: " + (state.deviceComplete() ? "완료" : "미완료")
@@ -92,6 +103,8 @@ public final class DeviceDialog extends JDialog {
     }
 
     private String actionName() {
+        if (state.introPresent()) return "사용";
+        if (state.firstTravelComplete()) return "수리 필요";
         if (state.era() == Era.PRESENT) return "과거로 시간 이동";
         if (state.era() == Era.PAST && !state.isWatchRepaired()) return "대체 부품 장착";
         if (state.era() == Era.PAST) return "미래로 시간 이동";
@@ -100,6 +113,8 @@ public final class DeviceDialog extends JDialog {
     }
 
     private boolean isActionEnabled() {
+        if (state.introPresent()) return state.canDepart();
+        if (state.firstTravelComplete()) return false;
         if (state.era() == Era.PRESENT) return state.canDepart();
         if (state.era() == Era.PAST && !state.isWatchRepaired()) return state.hasSparePart() && spareSelected;
         if (state.era() == Era.PAST) return true;

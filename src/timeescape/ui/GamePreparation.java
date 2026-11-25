@@ -12,6 +12,7 @@ final class GamePreparation {
     GamePreparation(){this(()->{
         LabWindowWeather weather=new LabWindowWeather();
         InventoryPanel.prepareImages(); // Also prepares NotebookStyle's paper image.
+        timeescape.system.DialogueCatalog.standard(); // Text file IO stays off the EDT.
         return weather;
     });}
     GamePreparation(Supplier<LabWindowWeather> loader){this.loader=loader;}

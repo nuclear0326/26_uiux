@@ -41,7 +41,7 @@ public final class SaveSlots {
                 var loaded=load(slot);var state=loaded.state();
                 long puzzles=state.snapshot().completed().stream().filter(id->{
                     String kind=state.catalog().steps().get(id).kind();
-                    return Set.of("present","rush_hour","gears","wires").contains(kind);
+                    return Set.of("present","rush_hour","gears","wires","temporary_power").contains(kind);
                 }).count();
                 Path source=loaded.recoveredFromBackup()?store.file().resolveSibling(slot.file+".bak"):store.file();
                 String time=DATE.format(Files.getLastModifiedTime(source).toInstant().atZone(ZoneId.systemDefault()));

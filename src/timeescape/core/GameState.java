@@ -14,6 +14,31 @@ public final class GameState {
     private String roomId;
 
     public GameState() { this(ProgressCatalog.standard()); }
+    /** New scenario entry. The plain constructor remains the legacy/save hydration baseline. */
+    public static GameState newGame() {
+        GameState state = new GameState();
+        state.complete("INTRO_START");
+        return state;
+    }
+    public boolean introScenario() { return done("INTRO_START"); }
+    public boolean introPresent() { return introScenario() && era() == Era.PRESENT && !done("ACT_FIRST_TRAVEL") && !done("ACT_START_FAILURE"); }
+    public boolean firstTravelComplete() { return introScenario() && done("ACT_FIRST_TRAVEL"); }
+    public boolean prototypeFailed() { return done("ACT_START_FAILURE"); }
+    public String introGoal() {
+        if(prototypeFailed() && era()==Era.PAST) return "장치 수리 후 과거에 도착했습니다. 과거 연구실을 조사하세요.";
+        if(prototypeFailed() && era()==Era.PRESENT) return !powered()?"시간이동에 실패했습니다. 배전함에서 연구실 전력을 복구하세요.":canDepart()?"로그 분석과 장치 수리가 끝났습니다. 보관함의 장치로 과거로 이동하세요.":"컴퓨터의 사고 로그를 확보하고 작업대에서 장치를 수리하세요.";
+        return introPresent() ? (has("DEVICE")
+            ? "연구 노트의 보관함에서 시간이동장치를 사용하세요."
+            : "왼쪽 보관 상자에서 시간이동장치를 꺼내세요.")
+            : "예상과 다른 과거에 도착했습니다. 고장난 장치와 연구실을 조사하세요.";
+    }
+    public void takePrototype() { complete("TUT001"); }
+    /** The prototype fails in the present; later repairs unlock the normal past gate. */
+    public void usePrototype() {
+        if (!introPresent() || !available("ACT_START_FAILURE"))
+            throw new IllegalStateException("먼저 상자에서 시간이동장치를 꺼내세요.");
+        complete("ACT_START_FAILURE");
+    }
     public GameState(ProgressCatalog catalog) {
         this.catalog = Objects.requireNonNull(catalog);
         roomId = catalog.initialRoom();
@@ -38,6 +63,11 @@ public final class GameState {
         return completed.contains(id);
     }
     public boolean available(String id) {
+        if(id.equals("ACT_FIRST_TRAVEL"))return false; // Retired action retained for save hydration only.
+        if (!introScenario() && (id.equals("TUT001") || id.equals("ACT_FIRST_TRAVEL") || id.equals("ACT_START_FAILURE"))) return false;
+        if (introPresent() && !Set.of("TUT001", "ACT_START_FAILURE").contains(id)) return false;
+        // Later return-to-present and horizontal missions are intentionally not implemented yet.
+        if (introScenario() && Set.of("ACT_REPAIR", "GATE002").contains(id)) return false;
         ProgressCatalog.Step step = catalog.steps().get(id);
         return step != null && !completed.contains(id) && roomId.equals(step.room())
             && (step.mission().isBlank() || !missionLocked(step.mission()))
@@ -68,6 +98,7 @@ public final class GameState {
         } while (changed);
     }
     public void collect(String id) {
+        if (introPresent()) throw new IllegalStateException(introGoal());
         ProgressCatalog.Item item = catalog.items().get(id);
         if (item == null) throw new IllegalArgumentException("Unknown item: " + id);
         if (!roomId.equals(item.room()) || !completed.containsAll(item.requires()))
@@ -97,6 +128,7 @@ public final class GameState {
             .or(() -> pending.stream().findFirst());
     }
     public String missionNext(String id) {
+        if(prototypeFailed() && powered() && id.equals("M_USB") && done("PZ006") && !done("PZ001")) return "컴퓨터 접근 퍼즐을 해결해 사고 로그를 분석하세요.";
         if (missionLocked(id)) return catalog.mission(id).requires().stream().filter(key -> !done(key))
             .sorted().map(key -> catalog.steps().get(key).prompt()).findFirst().orElse("");
         if (done(id)) return catalog.mission(id).finishedText();
@@ -150,10 +182,10 @@ public final class GameState {
     }
 
     // Compatibility facade: existing UI and its design remain unchanged.
-    public boolean powered() { return flag("power_restored"); }
+    public boolean powered() { return (flag("intro_power_on") && !prototypeFailed()) || flag("power_restored"); }
     public boolean usbComplete() { return done("M_USB"); }
     public boolean deviceComplete() { return done("M_DEVICE"); }
-    public boolean canDepart() { return usbComplete() && deviceComplete(); }
+    public boolean canDepart() { return introPresent() ? available("ACT_START_FAILURE") : usbComplete() && deviceComplete(); }
     public String usbNext() { return missionNext("M_USB"); }
     public String deviceNext() { return missionNext("M_DEVICE"); }
     public boolean hasSparePart() { return has("SPARE"); }
@@ -169,6 +201,7 @@ public final class GameState {
     public void installCorePart() { complete("ACT_INSTALL"); }
     public void escape() { complete("ACT_ESCAPE"); }
     public void moveToPast() {
+        if (introPresent()) { usePrototype(); return; }
         if (era() != Era.PRESENT) throw new IllegalStateException("현재에서만 과거로 이동할 수 있습니다.");
         enterRoom("past_1");
     }

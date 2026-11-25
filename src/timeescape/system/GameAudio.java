@@ -42,6 +42,12 @@ public final class GameAudio {
     private Clip terminal;
     private Clip menuThunder;
     private Clip menuStart;
+    private Clip firstTravel;
+    private Clip dialogueKey;
+    private final AtomicLong dialogueGeneration=new AtomicLong();
+    private boolean travelling;
+    private final AtomicLong travelGeneration=new AtomicLong();
+    private volatile double travelSeconds=-1;
     private final java.util.concurrent.CopyOnWriteArrayList<Clip> effects = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final java.util.Map<String, Long> lastEffects = new java.util.HashMap<>();
     private boolean inPuzzle;
@@ -97,6 +103,10 @@ public final class GameAudio {
         return c;
     }
     private void pollClock() {
+        if(travelling && firstTravel!=null) {
+            try { travelSeconds=firstTravel.isOpen() ? firstTravel.getMicrosecondPosition()/1_000_000.0 : -1; }
+            catch(RuntimeException ignored){travelSeconds=-1;}
+        }
         if(!transitionActive) return;
         Clip c=menuStart;
         double seconds=-1;
@@ -163,7 +173,7 @@ public final class GameAudio {
     }
 
     private float trackVolume(Track t) {
-        return t.gain * (inPuzzle ? .45f : 1f);
+        return t.gain * (travelling ? 0f : inPuzzle ? .45f : 1f);
     }
 
     private void refreshTrackGains() {
@@ -273,8 +283,42 @@ public final class GameAudio {
         enqueue(() -> { if(transitionRetry!=null)transitionRetry.cancel(false); transitionActive=false; if(menuStart!=null) { menuStart.stop(); menuStart.setFramePosition(0); } });
     }
 
+    /** All decoding stays on the audio worker. -2 holds the visual at its first frame. */
+    public void startFirstTravel() {
+        long generation=travelGeneration.incrementAndGet();
+        if(disabled||closed.get()){travelSeconds=-1;return;}
+        travelSeconds=-2;
+        enqueue(()->{
+            if(generation!=travelGeneration.get())return;
+            travelling=true;refreshTrackGains();
+            if(firstTravel!=null){firstTravel.stop();firstTravel.close();firstTravel=null;}
+            Clip clip=openClip("sfx/first_travel.wav");
+            if(generation!=travelGeneration.get()||closed.get()){if(clip!=null)clip.close();return;}
+            firstTravel=clip;
+            if(clip==null){travelSeconds=-1;return;}
+            try{setGain(clip,1f);clip.start();travelSeconds=0;}
+            catch(RuntimeException error){clip.close();firstTravel=null;travelSeconds=-1;}
+        });
+    }
+    public double firstTravelSeconds(){return travelSeconds;}
+    public void stopFirstTravel(){
+        travelGeneration.incrementAndGet();travelSeconds=-1;
+        enqueue(()->{travelling=false;if(firstTravel!=null){firstTravel.stop();firstTravel.close();firstTravel=null;}refreshTrackGains();});
+    }
+
+    public void dialogueTick(){
+        long token=dialogueGeneration.get();
+        enqueue(()->{
+            if(travelling||token!=dialogueGeneration.get())return;
+            if(dialogueKey==null||!dialogueKey.isOpen())dialogueKey=openClip("sfx/dialogue_key.wav");
+            if(dialogueKey==null||token!=dialogueGeneration.get())return;
+            dialogueKey.stop();dialogueKey.setFramePosition(0);setGain(dialogueKey,.09f);dialogueKey.start();
+        });
+    }
+    public void stopDialogueTick(){dialogueGeneration.incrementAndGet();enqueue(()->{if(dialogueKey!=null)dialogueKey.stop();});}
     public void play(String effect) { enqueue(() -> playEffect(effect)); }
     private void playEffect(String effect) {
+        if(travelling)return;
         if ("menu_thunder".equals(effect) && menuThunder!=null && menuThunder.isOpen()) {
             try { menuThunder.stop(); menuThunder.setFramePosition(0); setGain(menuThunder,SFX_VOLUME); menuThunder.start(); }
             catch(RuntimeException ex) { menuThunder.close(); menuThunder=null; }
@@ -308,6 +352,9 @@ public final class GameAudio {
         audio.shutdown();
     }
     private void closeAll() {
+        dialogueGeneration.incrementAndGet();if(dialogueKey!=null){dialogueKey.stop();dialogueKey.close();dialogueKey=null;}
+        travelGeneration.incrementAndGet();travelling=false;travelSeconds=-1;
+        if(firstTravel!=null){firstTravel.stop();firstTravel.close();firstTravel=null;}
         sceneGeneration++;
         if(sceneRetry!=null)sceneRetry.cancel(false);
         if(transitionRetry!=null)transitionRetry.cancel(false);

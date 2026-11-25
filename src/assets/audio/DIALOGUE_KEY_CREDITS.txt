@@ -1,0 +1,1 @@
+dialogue_key.wav: original procedural keyboard-style tap generated for TIME ESCAPE. No external recording or third-party samples. 45ms stereo PCM16 48kHz. Playback gain 0.09, one tick per three non-whitespace characters. Cached Clip on the existing audio worker.

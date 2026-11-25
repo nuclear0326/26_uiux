@@ -3,8 +3,8 @@ from pathlib import Path
 import argparse, hashlib, shutil, zipfile
 
 parser=argparse.ArgumentParser()
-parser.add_argument('--version',default='82')
-parser.add_argument('--base',default='81')
+parser.add_argument('--version',default='89')
+parser.add_argument('--base',default='88')
 parser.add_argument('--zip',action='store_true')
 args=parser.parse_args()
 if not args.version.isdecimal() or not args.base.isdecimal():raise ValueError('Numeric versions required')
@@ -16,6 +16,8 @@ if not dest.exists():
     for name in ['TimeEscape.exe','TimeEscape.ico','TEMPORARY_CHEAT.md']:shutil.copy2(base/name,dest/name)
     shutil.copytree(base/'runtime',dest/'runtime')
 app=dest/'app';app.mkdir(exist_ok=True)
+dialogue=app/'dialogue';dialogue.mkdir(exist_ok=True)
+shutil.copy2(root/'src/assets/dialogue/ko.txt',dialogue/'ko.txt')
 fonts=app/'fonts';fonts.mkdir(exist_ok=True)
 source=root/f'build/uix_v{args.version}.jar'
 target=app/source.name
@@ -35,6 +37,7 @@ if args.zip:
     archive=root/f'outputs/TIME_ESCAPE_v{args.version}_Windows.zip'
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
         for path in dest.rglob('*'):
-            if path.is_file():z.write(path,path.relative_to(dest.parent).as_posix())
+            if path.is_file() and not any(part == "save" for part in path.relative_to(dest).parts) and ".save" not in path.name:
+                z.write(path,path.relative_to(dest.parent).as_posix())
     with zipfile.ZipFile(archive) as z:assert z.testzip() is None
     print(archive)

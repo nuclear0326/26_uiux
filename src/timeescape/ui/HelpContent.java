@@ -15,8 +15,8 @@ final class HelpContent extends JPanel {
         {"Esc","연구 노트나 열린 창을 닫습니다."}
     };
     private static final String[] GUIDE = {
-        "전력 복구 후 두 미션을 원하는 순서로 진행하세요.",
-        "두 미션을 완료하면 손목 장치로 과거에 이동합니다."
+        "연구 노트의 현재 목표를 확인하며 연구실을 조사하세요.",
+        "획득한 장치는 보관함에서 클릭해 사용할 수 있습니다."
     };
     final List<Rectangle> guideLines = new ArrayList<>();
     int contentBottom;

@@ -35,7 +35,7 @@ public final class GameFrame extends JFrame {
     private boolean closing,autoExists=true,anySave;
     private long availabilityRevision;
     private boolean replaceSave;
-    private GameState state = new GameState();
+    private GameState state = GameState.newGame();
     private boolean spareSelected;
     private GameScenePanel scene;
     private final GamePreparation preparation=new GamePreparation();
@@ -71,6 +71,7 @@ public final class GameFrame extends JFrame {
     @Override public void dispose() {
         if(closing)return;
         closing=true;setEnabled(false);
+        if(hud!=null)hud.cancelFirstTravel();
         saveProgress().whenComplete((ignored,error)->{
             if(error!=null){closing=false;setEnabled(true);reportSaveFailure();return;}
             saveQueue.close();GameAudio.get().shutdown();super.dispose();
@@ -90,6 +91,7 @@ public final class GameFrame extends JFrame {
         return saveProgress().thenCompose(ignored->saveQueue.load(slot)).thenCompose(result->ensureGameUI().thenApply(ready->{
             if(closing||!ready)return false;
             state=result.state();gameStarted=true;spareSelected=false;replaceSave=false;
+            hud.dismissDialogue();
             scene.setEra(state.era());scene.restorePowered(state.powered());
             log(slot.title()+"에서 진행을 불러왔습니다.");refresh();cardLayout.show(cards,GAME);GameAudio.get().era(state.era());
             if(result.recoveredFromBackup())JOptionPane.showMessageDialog(this,
@@ -153,9 +155,13 @@ public final class GameFrame extends JFrame {
     }
     private void showHelp() { hud.openHelp(); }
     private void resetGame() {
-        state = new GameState(); replaceSave = true; scene.restorePowered(false); spareSelected = false; hud.closeNotebook();
-        log("어두운 연구실입니다. 벽면 철제 배전함에서 전력을 복구하세요.");
+        state = GameState.newGame(); replaceSave = true; scene.restorePowered(state.powered()); spareSelected = false; hud.closeNotebook();
+        log(state.introGoal());
         refresh(); GameAudio.get().play("ui_click");
+        showOpeningDialogue();
+    }
+    private void showOpeningDialogue() {
+        hud.showOpeningTutorial(timeescape.system.DialogueCatalog.standard().scene("intro.start"));
     }
 
     private void initMainMenu() {
@@ -178,16 +184,17 @@ public final class GameFrame extends JFrame {
                         return;
                     }
                     if(!ready)return;
-                state = new GameState();
+                state = GameState.newGame();
                 replaceSave = true;
-                scene.restorePowered(false);
+                scene.restorePowered(state.powered());
                 spareSelected = false;
                 gameStarted = true;
                 mainMenu.setContinueAvailable(true);
-                log("어두운 연구실입니다. 벽면 철제 배전함에서 전력을 복구하세요.");
+                log(state.introGoal());
                 refresh();
                 cardLayout.show(cards, GAME);
                 GameAudio.get().era(state.era());
+                showOpeningDialogue();
                 });
             }
             @Override public void continueGame() {
@@ -238,6 +245,7 @@ public final class GameFrame extends JFrame {
     }
 
     private String stageText() {
+        if (state.introScenario()) return state.introGoal();
         if (state.isEscaped()) return "탈출 완료";
         if (state.era() == Era.PRESENT) return state.canDepart() ? "두 미션 완료 · 과거 이동 가능" : state.powered() ? "출발 준비 · 두 미션을 자유롭게 진행" : "벽면 철제 배전함에서 전력 복구 필요";
         if (state.era() == Era.PAST) return state.isWatchRepaired() ? "장치 복구 완료 · 미래 이동 가능" : "대체 부품으로 장치 수리 필요";
@@ -247,7 +255,16 @@ public final class GameFrame extends JFrame {
     private void log(String text) { if (hud != null) hud.showMessage(text); }
 
     private void interactScene(String id) {
-        if(closing)return;
+        if(closing||hud.isTravelling())return;
+        if (state.introPresent()) {
+            if (id.equals("CASE") && !state.has("DEVICE")) {
+                state.takePrototype();
+                GameAudio.get().play("item_pickup");
+                log("시간이동장치를 꺼냈습니다. 연구 노트의 보관함에서 장치를 사용하세요.");
+                refresh();
+            } else log(id.equals("POWER") ? "연구실 전원이 켜져 있습니다. " + state.introGoal() : state.introGoal());
+            return;
+        }
         if (state.era() == Era.PRESENT && !state.powered() && !id.equals("POWER")) {
             log("전력이 없습니다. 벽면 철제 배전함을 먼저 조사하세요.");
             return;
@@ -284,10 +301,10 @@ public final class GameFrame extends JFrame {
     /** Exactly one progress notification and autosave path for every solved puzzle kind. */
     private void onPuzzleCompleted(timeescape.core.ProgressCatalog.Step step) {
             log(switch (step.id()) {
-                case "PZ001" -> "연구 데이터 복구 완료. USB에 복사하세요.";
+                case "PZ001" -> state.prototypeFailed()?"사고 로그 분석 완료. 분석 데이터를 USB에 복사하세요.":"연구 데이터 복구 완료. USB에 복사하세요.";
                 case "PZ004" -> "전력이 복구되었습니다. 조명이 안정되면 두 미션을 자유롭게 진행하세요.";
                 case "PZ006" -> "연구 계정 접근 권한을 얻었습니다.";
-                case "PZ007" -> "USB 확보 미션 완료. USB는 미래까지 보관됩니다.";
+                case "PZ007" -> state.prototypeFailed()?"사고 로그를 USB에 확보했습니다. 장치 수리와 좌표 보정을 완료하면 과거로 이동할 수 있습니다.":"USB 확보 미션 완료. USB는 미래까지 보관됩니다.";
                 case "PZ002" -> "과거 작업대에서 '대체 부품'을 획득했습니다. 인벤토리에서 부품을 선택하고 손목 장치를 여세요.";
                 case "PZ003" -> "중앙 시간 장치에서 '미래 핵심 부품'을 확보했습니다. 인벤토리의 손목 장치에 장착하세요.";
                 default -> step.mission().isBlank() ? step.name() + " 완료" : state.missionNext(step.mission());
@@ -298,7 +315,7 @@ public final class GameFrame extends JFrame {
     }
 
     private void interactInventory(String id) {
-        if(closing)return;
+        if(closing||hud.isTravelling())return;
         switch (id) {
             case "SPARE" -> {
                 spareSelected = !spareSelected;
@@ -309,7 +326,30 @@ public final class GameFrame extends JFrame {
             case "CORE" -> { GameAudio.get().play("file_select"); log("미래 핵심 부품을 확보했습니다. 손목 장치를 클릭해 장착할 수 있습니다."); }
             case "USB" -> log(state.usbComplete() ? "데이터 USB는 미래에서 사용할 수 있도록 보관합니다." : "컴퓨터에서 복구 데이터를 복사하세요.");
             case "DEVICE" -> {
-                if (!state.done("PZ010")) { log("먼저 시간여행 장치를 조립하세요."); return; }
+                if (!state.has("DEVICE")) { log("먼저 시간이동장치를 획득하세요."); return; }
+                if (state.introPresent() || state.firstTravelComplete()) {
+                    Era before = state.era();
+                    new DeviceDialog(this, state, spareSelected, () -> {
+                        if (before != state.era()) {
+                            hud.closeNotebook();
+                            GameAudio.get().era(state.era());
+                            log("장치가 고장나 예상과 다른 과거에 도착했습니다.");
+                        }
+                        refresh();
+                    }, () -> {
+                        GameState departing=state;
+                        hud.startFirstTravel(()->{
+                            if(closing||state!=departing)return;
+                            state.usePrototype();
+                            spareSelected=false;
+                            GameAudio.get().era(state.era());
+                            log(state.introGoal());
+                            refresh();
+                            hud.showDialogue(timeescape.system.DialogueCatalog.standard().scene("intro.failure"));
+                        });
+                    }).setVisible(true);
+                    return;
+                }
                 GameAudio.get().play("ui_open");
                 Era beforeEra = state.era();
                 boolean repairedBefore = state.isWatchRepaired();

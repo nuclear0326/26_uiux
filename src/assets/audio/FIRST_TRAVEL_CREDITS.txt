@@ -1,0 +1,16 @@
+TIME ESCAPE first travel concept preview
+This is an offline audiovisual composite using actual game backgrounds and HUD capture. Not a recording of the running game. Repository, EXE and saves unchanged.
+Timeline: motor 0.50s; fluorescent flicker 7.70s; full power off and power-cut effect 11.70s; warp 14.70s; past reveal 15.15s. End 22.50s.
+M5: arunangshubanerjee, Mechanical Motor Starting - Whirring - Stopping (330043), approved v5 EQ and level automation, full length.
+L1: TRP via freesound_community, fluorescent flickering (79289), approved menu_start.wav first 4s only, gain 0.8, no glass sound included. Existing MenuStartTimeline darkness reused.
+L3: ninjatrappeur via freesound_community, power cut (101047), original speed, gain 0.38.
+W1: SoundReality, Whoosh Appearance (246467), approved source trim from 1.7 seconds, preview gain 0.55.
+Sources:
+https://pixabay.com/sound-effects/film-special-effects-mechanical-motor-starting-whirring-stopping-330043/
+https://pixabay.com/sound-effects/film-special-effects-light-switch-fluorescent-flickering-electric-bulb-banff-190107-79289/
+https://pixabay.com/sound-effects/film-special-effects-power-cut-101047/
+https://pixabay.com/sound-effects/film-special-effects-whoosh-appearance-246467/
+License: Pixabay Content License. Sources acquired through official download UI.
+Validation: video fully decoded without errors; audio mix peak below clipping. Subjective listening review pending.
+
+Production v83 uses approved v6 soundtrack. Refer to docs/FIRST_TRAVEL_EFFECT.md for final timing and gains.
