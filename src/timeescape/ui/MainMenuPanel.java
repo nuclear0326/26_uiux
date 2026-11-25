@@ -40,14 +40,17 @@ public final class MainMenuPanel extends JPanel {
     public static final String GAME_TITLE = "TIME ESCAPE";
 
     private final MenuImageAssets images = new MenuImageAssets();
-    private final MenuAtmosphere atmosphere = new MenuAtmosphere(images);
+    private final MenuAtmosphere atmosphere = new MenuAtmosphere(images,true);
     private double elapsed, departure = -1, lightningAt = -100, nextThunder = 12, thunderDue = -1;
     private long lastTick;
     private int stormNumber;
     private boolean glassPlayed;
     private Runnable pending;
     private double frozenClock;
-    private boolean runningTransition() { return pending != null; }
+    private boolean preparingTransition;
+    private long preparationRevision;
+    java.util.concurrent.CompletableFuture<Void> prepareEffects(){return atmosphere.prepare();}
+    private boolean runningTransition() { return pending != null || preparingTransition; }
     private void advance(double dt) {
         elapsed += Math.min(.1,Math.max(0,dt));
         if (pending != null) {
@@ -68,6 +71,7 @@ public final class MainMenuPanel extends JPanel {
         }
     }
     private void stopAnimation() {
+        preparationRevision++;preparingTransition=false;
         GameAudio.get().stopMenuTransition();
         refreshTimer.stop(); lastTick=0;pending=null;departure=-1;thunderDue=-1;lightningAt=-100;nextThunder=elapsed+12;atmosphere.reset();
     }
@@ -233,9 +237,20 @@ public final class MainMenuPanel extends JPanel {
         setCursor(GameCursors.normal());
         GameAudio.get().play("ui_click");
         if (transitionAnimation && button == 0) {
-            GameAudio.get().startMenuTransition();
-            lastTick=System.nanoTime();
-            pending=callback;departure=0;glassPlayed=false;thunderDue=-1;frozenClock=MenuAtmosphere.clockSeconds();atmosphere.reset();
+            preparingTransition=true;
+            long revision=++preparationRevision;
+            boolean attached=isShowing();
+            java.util.function.BiConsumer<Void,Throwable> begin=(ignored,error)->{
+                if(revision!=preparationRevision)return;
+                preparingTransition=false;
+                if(attached&&!isShowing())return;
+                if(error!=null){javax.swing.JOptionPane.showMessageDialog(this,"시작 연출을 준비하지 못했습니다. 배포 파일을 확인해주세요.","준비 실패",javax.swing.JOptionPane.ERROR_MESSAGE);return;}
+                GameAudio.get().startMenuTransition();
+                lastTick=System.nanoTime();
+                pending=callback;departure=0;glassPlayed=false;thunderDue=-1;frozenClock=MenuAtmosphere.clockSeconds();atmosphere.reset();
+            };
+            var ready=atmosphere.prepare();
+            if(ready.isDone())ready.whenComplete(begin);else ready.whenCompleteAsync(begin,javax.swing.SwingUtilities::invokeLater);
         } else callback.run();
     }
 

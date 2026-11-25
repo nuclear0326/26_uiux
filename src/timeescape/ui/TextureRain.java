@@ -2,26 +2,44 @@ package timeescape.ui;
 import java.awt.*;import java.awt.image.BufferedImage;
 /** Advection of the original glass highlights, not new particle strokes. */
 final class TextureRain {
- final int W=1600,H=400;final int[] source=new int[W*H];final float[] detail=new float[W*H];
- final float[] weight=new float[W*H];final BufferedImage layer=new BufferedImage(W,H,BufferedImage.TYPE_INT_ARGB);
- final java.util.List<double[]> events=new java.util.ArrayList<>();
- private double cycleSeconds;
+ static final int W=1600,H=400;
+ final int[] source;
+ final float[] detail,weight;
+ final BufferedImage layer;
+ final java.util.List<double[]> events;
+ private final double cycleSeconds;
  final float[] delta=new float[W*H];
- TextureRain(){
+ private static final class Shared {
+  static final Data DATA=new Data();
+ }
+ private static final class Data {
+  final int[] source=new int[W*H];final float[] detail=new float[W*H],weight=new float[W*H];
+  final java.util.List<double[]> events=new java.util.ArrayList<>();
+  double cycleSeconds;
+  Data(){
   try(var raw=TextureRain.class.getResourceAsStream("/assets/effects/menu_rain.bin.gz")){
    if(raw==null)throw new java.io.IOException("Missing precomputed rain data");
-   try(var in=new java.io.DataInputStream(new java.io.BufferedInputStream(new java.util.zip.GZIPInputStream(raw)))){
-    if(in.readInt()!=0x54455231 || in.readInt()!=1 || in.readInt()!=W || in.readInt()!=H)
+   try(var gzip=new java.util.zip.GZIPInputStream(raw)){
+    var in=java.nio.ByteBuffer.wrap(gzip.readAllBytes()).order(java.nio.ByteOrder.BIG_ENDIAN);
+    if(in.getInt()!=0x54455231 || in.getInt()!=1 || in.getInt()!=W || in.getInt()!=H)
      throw new java.io.IOException("Unsupported rain data");
-    for(int i=0;i<source.length;i++)source[i]=in.readInt();
-    for(int i=0;i<detail.length;i++)detail[i]=in.readFloat();
-    for(int i=0;i<weight.length;i++)weight[i]=in.readFloat();
-    cycleSeconds=in.readDouble();int count=in.readInt();
+    in.asIntBuffer().get(source);in.position(in.position()+source.length*4);
+    in.asFloatBuffer().get(detail);in.position(in.position()+detail.length*4);
+    in.asFloatBuffer().get(weight);in.position(in.position()+weight.length*4);
+    cycleSeconds=in.getDouble();int count=in.getInt();
     if(!Double.isFinite(cycleSeconds)||cycleSeconds<=0||count<1||count>10000)throw new java.io.IOException("Invalid rain events");
-    for(int i=0;i<count;i++){double[] event=new double[5];for(int k=0;k<5;k++)event[k]=in.readDouble();events.add(event);}
-    if(in.read()!=-1)throw new java.io.IOException("Unexpected rain data");
+    for(int i=0;i<count;i++){double[] event=new double[5];for(int k=0;k<5;k++)event[k]=in.getDouble();events.add(event);}
+    if(in.hasRemaining())throw new java.io.IOException("Unexpected rain data");
    }
   }catch(java.io.IOException e){throw new IllegalStateException("Cannot load precomputed menu rain",e);}
+
+  }
+ }
+ TextureRain(){this(true);}
+ TextureRain(boolean menu){
+  Data data=Shared.DATA;source=menu?data.source:null;detail=data.detail;weight=menu?data.weight:null;
+  events=data.events;cycleSeconds=data.cycleSeconds;
+  layer=menu?new BufferedImage(W,H,BufferedImage.TYPE_INT_ARGB):null;
  }
  void updateDelta(double t){
   java.util.Arrays.fill(delta,0);int active=0;
@@ -87,10 +105,6 @@ final class TextureRain {
  void deposit(int x,double y,double value){
   int iy=(int)Math.floor(y);if(iy<0||iy+1>=H)return;double f=y-iy;
   delta[iy*W+x]+=value*(1-f);delta[(iy+1)*W+x]+=value*f;
- }
- double sample(int x,double y){
-  int ya=(int)Math.floor(y);if(ya<0||ya+1>=H)return 0;
-  double f=y-ya;return detail[ya*W+x]*(1-f)+detail[(ya+1)*W+x]*f;
  }
  static int clamp(double v){return (int)Math.max(0,Math.min(255,v));}
 }

@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 /** Uses the production menu rain engine in three uniformly scaled window bays. */
 final class LabWindowWeather {
     private final LabWindowMask mask = new LabWindowMask();
-    private final TextureRain rain = new TextureRain();
+    private final TextureRain rain = new TextureRain(false);
     private final BufferedImage stormOn,stormOff;
     private final Bay[] bays={new Bay(781,967,164,0),new Bay(996,1213,144,1.7),new Bay(1248,1464,120,3.4)};
     private static final int PANE_W=180,PANE_H=400;
@@ -36,8 +36,12 @@ final class LabWindowWeather {
         return im.getRGB(px,py);
     }
     private static int channel(int a,int b,int shift,float power){return (int)((a>>shift&255)*(1-power)+(b>>shift&255)*power);}
+    private double cachedSeconds=Double.NaN;
+    private float cachedPower=Float.NaN;
     private void drawRain(Graphics2D g,double seconds,float power){
+        boolean update=Double.compare(seconds,cachedSeconds)!=0 || Float.compare(power,cachedPower)!=0;
         for(Bay bay:bays){
+            if(update){
             rain.updateDistantDelta(seconds+bay.phase);
             java.util.Arrays.fill(bay.pixels,0);
             for(int y=0;y<PANE_H;y++)for(int x=0;x<PANE_W;x++){
@@ -51,9 +55,11 @@ final class LabWindowWeather {
                 int ai=Math.min(255,(int)Math.ceil(alpha*255));alpha=ai/255.;
                 bay.pixels[index]=(ai<<24)|(TextureRain.clamp(r+dr/alpha)<<16)|(TextureRain.clamp(green+dg/alpha)<<8)|TextureRain.clamp(b+db/alpha);
             }
+            }
             Graphics2D pane=(Graphics2D)g.create();pane.translate(bay.x,bay.y);pane.scale(bay.scale,bay.scale);
             pane.drawImage(bay.image,0,0,null);pane.dispose();
         }
+        cachedSeconds=seconds;cachedPower=power;
     }
     private static BufferedImage load(String name)throws IOException {
         try(var in=LabWindowWeather.class.getResourceAsStream("/assets/effects/"+name)) {

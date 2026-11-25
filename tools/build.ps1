@@ -20,12 +20,14 @@ New-Item -ItemType Directory -Force $weatherClasses | Out-Null
 $weatherSources = @(Get-ChildItem (Join-Path $PSScriptRoot 'weather') -Filter *.java | ForEach-Object FullName)
 & "$JavaHome\bin\javac.exe" -encoding UTF-8 --release 21 -cp $classes -d $weatherClasses $weatherSources
 if ($LASTEXITCODE -ne 0) { throw 'Weather tools compilation failed' }
+& "$JavaHome\bin\java.exe" '-Djava.awt.headless=true' -cp "$weatherClasses;$classes;$root\src" timeescape.ui.GenerateClockGlass "$root\src\assets"
+if ($LASTEXITCODE -ne 0) { throw 'Clock fracture generation failed' }
 & "$JavaHome\bin\java.exe" '-Djava.awt.headless=true' -cp "$weatherClasses;$classes;$root\src" timeescape.ui.GenerateMenuWeather "$root\src\assets"
 if ($LASTEXITCODE -ne 0) { throw 'Weather asset generation failed' }
 & "$JavaHome\bin\java.exe" '-Djava.awt.headless=true' -cp "$weatherClasses;$classes;$root\src" timeescape.ui.GenerateLabWeather "$root\src\assets"
 if ($LASTEXITCODE -ne 0) { throw 'Lab weather generation failed' }
-& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v79.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
+& "$JavaHome\bin\jar.exe" "-J-Djava.io.tmpdir=$build" --create --file "$build\uix_v82.jar" --main-class timeescape.Main -C $classes . -C "$root\src" assets
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
-Write-Output "Built $build\uix_v79.jar"
+Write-Output "Built $build\uix_v82.jar"
 
 

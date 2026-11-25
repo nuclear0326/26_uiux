@@ -1,2 +1,1 @@
-# v69
-스킵 단축키를 Shift+8+9+0으로 통일. 배선은 쉬움에서 어려움으로 이동 후 재입력 시 완료. 일반 완료 기능 유지. 게임 미실행 검증 완료.
+# v82 - Startup audio recovery fixed. 15 native EXE runs passed, including failure recovery and audio-driven intro checks. Original assets and timelines unchanged. See docs/AUDIO_RECOVERY_V82.md for evidence and limitations.

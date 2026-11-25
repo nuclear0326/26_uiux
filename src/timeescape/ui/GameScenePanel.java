@@ -42,7 +42,7 @@ public final class GameScenePanel extends JPanel {
     private static final int IMAGE_H = 1080;
     private final timeescape.system.ScaledBackground backgroundCache = new timeescape.system.ScaledBackground();
     private final timeescape.system.ScaledBackground offBackgroundCache = new timeescape.system.ScaledBackground();
-    private final LabWindowWeather windowWeather = new LabWindowWeather();
+    private final LabWindowWeather windowWeather;
     private final Timer weatherTimer = new Timer(33, e -> updateWeather());
     private long weatherTick;
     private double weatherSeconds, lightningAt=-100, nextLightning=12, thunderDue=-1;
@@ -174,7 +174,9 @@ public final class GameScenePanel extends JPanel {
         super.removeNotify();
     }
 
-    public GameScenePanel(Consumer<String> onHotspotClick) {
+    public GameScenePanel(Consumer<String> onHotspotClick) { this(onHotspotClick,new LabWindowWeather()); }
+    GameScenePanel(Consumer<String> onHotspotClick,LabWindowWeather weather) {
+        this.windowWeather=java.util.Objects.requireNonNull(weather);
         this.onHotspotClick = onHotspotClick;
         setBackground(new Color(8, 11, 16));
         setPreferredSize(new Dimension(1120, 700));

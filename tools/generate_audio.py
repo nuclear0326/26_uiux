@@ -66,10 +66,6 @@ for name,root,shade in [('menu',55,0),('present',58.25,1),('past',65.5,2),('futu
     x+=.025*band(len(t),350,1500)*(.5+.5*np.sin(2*np.pi*t/L+shade))
     write('bgm',name,x,.055,.27,True)
 
-# Consistent two-beat pendulum: tick / tock 0.5 s apart, no musical beeps.
-clock=np.zeros(len(t))
-for i in range(64):place(clock,tick(i%2==1),.25+i*.5,wrap=True)
-write('ambience','clockwork',clock,.042,.68,True)
 rain=band(len(t),180,7200)*(.85+.15*np.cos(2*np.pi*t/L))
 rain+=.22*band(len(t),40,500)
 write('ambience','rain',rain,.032,.28,True)
@@ -104,11 +100,5 @@ x+=.45*(sine(48,u)+.22*sine(96,u))*envelope
 place(x,impact(1.2,58),.85,.8)
 for delay,amp in [(1.02,.25),(1.24,.13)]:place(x,impact(.9,72),delay,amp)
 write('sfx','time_travel',fade(x,.12,.65),.12,.62)
-# 1.9 s matches the menu's fast-clock animation.
-x=np.zeros(len(timeline(1.9)));start=.015;i=0
-while start<1.65:
-    place(x,tick(i%2==1),start,.6);start+=max(.027,.145*(1-start/2));i+=1
-place(x,impact(.23,95),1.66,.32)
-write('sfx','clock_spin',fade(x,.003,.08),.055,.38)
 (ROOT/'audio_validation.json').write_text(json.dumps(report,indent=2),encoding='utf8')
 print('Generated',len(report),'original PCM16 audio assets.')

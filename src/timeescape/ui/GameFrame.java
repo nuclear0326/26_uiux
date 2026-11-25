@@ -37,10 +37,12 @@ public final class GameFrame extends JFrame {
     private boolean replaceSave;
     private GameState state = new GameState();
     private boolean spareSelected;
-    private final GameScenePanel scene = new GameScenePanel(this::interactScene);
-    private final InventoryPanel inventory = new InventoryPanel(this::interactInventory);
+    private GameScenePanel scene;
+    private final GamePreparation preparation=new GamePreparation();
+    private boolean starting;
+    private InventoryPanel inventory;
     private final JLabel sceneTitle = new JLabel();
-    private final MissionPanel missions = new MissionPanel();
+    private MissionPanel missions;
     private final JLabel progress = new JLabel();
     private final JTextArea message = new JTextArea();
     private GameHud hud;
@@ -54,13 +56,12 @@ public final class GameFrame extends JFrame {
         setMinimumSize(new Dimension(1020, 650));
         setSize(1500, 880);
         setLocationRelativeTo(null);
-        initUI();
         initMainMenu();
         setContentPane(cards);
         cardLayout.show(cards, MENU);
-        refresh();
         javax.swing.SwingUtilities.invokeLater(() -> GameAudio.get().menu());
         addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override public void windowOpened(java.awt.event.WindowEvent e) { if(!closing){mainMenu.prepareEffects();preparation.prepare();} }
             @Override public void windowClosing(java.awt.event.WindowEvent e) {
                 dispose();
             }
@@ -77,24 +78,24 @@ public final class GameFrame extends JFrame {
     }
 
     private void showContinueSlots() {
-        if(closing)return;
-        queueAutoSave();scene.setInputBlocked(true);continueSlots.open("load");
+        if(closing||starting)return;
+        queueAutoSave();setGameInputBlocked(true);ensureContinueSlots().open("load");
     }
     private void closeContinueSlots() {
-        if(continueSlots.isBusy())return;
-        continueSlots.release();scene.setInputBlocked(false);
-        if(mainMenu.isShowing())mainMenu.requestFocusInWindow();else scene.requestFocusInWindow();
+        if(continueSlots==null||continueSlots.isBusy())return;
+        continueSlots.release();setGameInputBlocked(false);
+        if(mainMenu.isShowing())mainMenu.requestFocusInWindow();else if(scene!=null)scene.requestFocusInWindow();
     }
     private java.util.concurrent.CompletableFuture<Boolean> loadSlot(timeescape.system.SaveSlots.Slot slot) {
-        return saveProgress().thenCompose(ignored->saveQueue.load(slot)).thenApply(result->{
-            if(closing)return false;
+        return saveProgress().thenCompose(ignored->saveQueue.load(slot)).thenCompose(result->ensureGameUI().thenApply(ready->{
+            if(closing||!ready)return false;
             state=result.state();gameStarted=true;spareSelected=false;replaceSave=false;
             scene.setEra(state.era());scene.restorePowered(state.powered());
             log(slot.title()+"에서 진행을 불러왔습니다.");refresh();cardLayout.show(cards,GAME);GameAudio.get().era(state.era());
             if(result.recoveredFromBackup())JOptionPane.showMessageDialog(this,
                 "선택한 저장소의 이전 백업으로 복구했습니다.","저장 복구",JOptionPane.INFORMATION_MESSAGE);
             return true;
-        });
+        }));
     }
     private java.util.concurrent.CompletableFuture<Boolean> saveManualSlot(timeescape.system.SaveSlots.Slot slot) {
         if(!gameStarted||closing)return java.util.concurrent.CompletableFuture.completedFuture(false);
@@ -131,12 +132,24 @@ public final class GameFrame extends JFrame {
         });
     }
 
-    private void initUI() {
+    private void setGameInputBlocked(boolean blocked){if(scene!=null)scene.setInputBlocked(blocked);}
+    private java.util.concurrent.CompletableFuture<Boolean> ensureGameUI(){
+        return preparation.readyOnEdt().thenApply(weather->{
+            if(closing)return false;
+            if(hud==null)initUI(weather);
+            return true;
+        });
+    }
+    private void initUI(LabWindowWeather weather) {
+        scene=new GameScenePanel(this::interactScene,weather);
+        inventory=new InventoryPanel(this::interactInventory);
+        missions=new MissionPanel();
         inventory.setReadListener(this::queueAutoSave);
         hud = new GameHud(scene, missions, inventory, this::showHelp, this::resetGame, this::showMainMenu);
         hud.setTransitionSettings(()->mainMenu.isTransitionAnimationEnabled(),value->mainMenu.setTransitionAnimation(value));
         hud.setAsyncSaveSlots(saveQueue::summaries, this::saveManualSlot, this::loadSlot);
         gameRoot.add(hud, BorderLayout.CENTER);
+        gameRoot.revalidate();
     }
     private void showHelp() { hud.openHelp(); }
     private void resetGame() {
@@ -148,14 +161,23 @@ public final class GameFrame extends JFrame {
     private void initMainMenu() {
         mainMenu = new MainMenuPanel(new MainMenuPanel.MenuActions() {
             @Override public boolean confirmNewGame() {
-                if(closing)return false;
+                if(closing||starting)return false;
                 if (!autoExists) return true;
-                scene.setInputBlocked(true);
-                continueSlots.open("newgame");
+                setGameInputBlocked(true);
+                ensureContinueSlots().open("newgame");
                 return false;
             }
             @Override public void startGame() {
-                if(closing)return;
+                if(closing||starting)return;
+                starting=true;
+                ensureGameUI().whenComplete((ready,error)->{
+                    starting=false;
+                    if(closing)return;
+                    if(error!=null){
+                        JOptionPane.showMessageDialog(GameFrame.this,"게임 리소스를 준비하지 못했습니다. 배포 파일을 확인해주세요.","준비 실패",JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    if(!ready)return;
                 state = new GameState();
                 replaceSave = true;
                 scene.restorePowered(false);
@@ -166,6 +188,7 @@ public final class GameFrame extends JFrame {
                 refresh();
                 cardLayout.show(cards, GAME);
                 GameAudio.get().era(state.era());
+                });
             }
             @Override public void continueGame() {
                 showContinueSlots();
@@ -182,12 +205,16 @@ public final class GameFrame extends JFrame {
         });
         mainMenu.setContinueAvailable(anySave);
         updateSaveAvailability();
+        cards.add(mainMenu, MENU);
+        cards.add(gameRoot, GAME);
+    }
+    private GameMenuOverlay ensureContinueSlots(){
+        if(continueSlots!=null)return continueSlots;
         continueSlots = new GameMenuOverlay(mainMenu, this::closeContinueSlots, ()->{}, ()->{});
         continueSlots.setAsyncSaveSlots(saveQueue::summaries, slot->java.util.concurrent.CompletableFuture.completedFuture(false), this::loadSlot);
         continueSlots.setNewGameAction(mainMenu::startConfirmedNewGame);
         setGlassPane(continueSlots);
-        cards.add(mainMenu, MENU);
-        cards.add(gameRoot, GAME);
+        return continueSlots;
     }
 
     private void showMainMenu() {

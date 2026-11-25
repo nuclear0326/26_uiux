@@ -1,3 +1,51 @@
+## v82
+
+- Request audio lines using each original WAV format. Add bounded asynchronous recovery for startup clips and scene loops, without duplicate playback or delayed one-shot effects.
+- Preserve audio assets and UI timelines byte-for-byte. Improve device-error diagnostics.
+- Passed 15 actual EXE runs (10 normal, 3 injected recovery, 2 audio-synchronized intros) and regression checks. Historical hardware exception root cause remains unconfirmed; see docs/AUDIO_RECOVERY_V82.md.
+
+## v81
+
+- Precomputed clock fracture layers, deferred menu effects and overlays, bulk rain decoding, original external fonts.
+- Final paired EXE startup median: 1076 ms to 759 ms (29.5% reduction). 18 frames identical. Actual start/save/load/close verified with isolated saves.
+- Full results and transient audio limitation: docs/STARTUP_OPTIMIZATION_V81.md.
+
+## v80
+
+
+확실히 사용하지 않는 파일 16개(자산 14개, Java 클래스 2개)를 제거했습니다. 삭제 파일은 별도 ZIP과 SHA-256 목록으로 보관했습니다. 이전 배포본, 저장 파일, 라이선스 파일은 삭제하지 않았습니다.
+
+첫 창 표시 전에 연구실 화면과 모든 자산을 준비하던 구조를 변경했습니다. 첫 창이 열린 뒤 배경 작업에서 연구실 이미지, 날씨, 아이템 이미지를 준비하며, Swing 화면 생성과 상태 반영은 EDT에서 수행합니다. 준비 완료 전에 시작하거나 불러오면 완료를 비동기로 기다립니다. 중복 준비, 실패, 종료 중 완료를 처리합니다. 로딩 화면은 추가하지 않았습니다.
+
+시작 화면과 연구실은 읽기 전용 빗방울 데이터를 공유합니다. 연구실에서 불필요한 메뉴 전용 출력 버퍼를 없애고 같은 시각과 전력 상태의 재그리기는 결과를 재사용합니다. 큰 배열과 버퍼 기준 약 10.24 MB의 중복 할당을 줄였습니다. 전체 프로세스 메모리 실측값은 아닙니다.
+
+## 초기 준비 시간
+
+각 버전 별도 JVM에서 headless 구성 요소 준비 시간을 3회 측정했습니다. 게임과 EXE를 실행하지 않았습니다.
+
+|항목|v79|v80|
+|---|---:|---:|
+|1회|1012.0 ms|658.6 ms|
+|2회|994.7 ms|647.7 ms|
+|3회|986.3 ms|650.1 ms|
+|중앙값|994.7 ms|650.1 ms|
+
+중앙값 약 344.6 ms, 34.6% 감소. EXE 클릭부터 실제 창 표시까지의 시간이 아니며 JVM 시작, OS 디스크 캐시, 보안 검사 등의 시간은 포함하지 않습니다. 준비가 끝나기 전 게임에 진입하면 짧게 기다릴 수 있습니다.
+
+## 기능 및 화면 검증
+
+- Java 21 전체 컴파일과 빌드 시 날씨 데이터 생성 성공.
+- 주요 화면 8장(메뉴 3장, 연구실 점등/소등, 연구 기록, 보관함, 메뉴 오버레이) 픽셀 동일.
+- 비동기 자산 준비 14개, 비동기 오디오 26개 검증 통과. 실제 오디오 장치 미사용.
+- 저장/복구 45개, 저장 큐 16개, 슬롯 20개, 비동기 슬롯 15개, 아이템 확인 상태 21개 검증 통과.
+- 단계별 치트 및 일반 완료 210개, 공통 퍼즐 실행 63개, 진행 구조 51개, 새 게임 확인 30개 검증 통과.
+- 현재 퍼즐 모델 260121회 비교 통과. 오디오 디코더 18개 및 WAV 20개 검사 통과.
+- 시작 화면 빗방울 픽셀 비교, 연구실 창문 하단 적용 범위 검사 통과.
+- 삭제된 파일의 소스 및 JAR 부재 확인. ZIP CRC, 배포 JAR 일치와 EXE MZ 서명 확인.
+
+네이티브 게임 창이나 EXE의 실제 실행은 요청에 따라 수행하지 않았습니다. 따라서 실제 환경에서의 클릭, 사운드 장치, 전체 화면 동작까지 무오류를 보장하는 검증은 아닙니다. 저장 형식과 진행 데이터 모델은 변경하지 않았습니다.
+
+
 ## v79
 
 - Narrowed and tapered droplet heads with 1.35x vertical elongation, sharpened tapered tails and increased frequency from four to five streams. Preserved gathering, 1.5x terminal speed, window masking and lightning.
@@ -308,3 +356,5 @@ Shift: 떠다니는 원형 입자 → Effekseer 고정 광점 애니메이션.
 
 # v55
 - Swap new-game prompt buttons: Cancel on the left, Start on the right.
+
+

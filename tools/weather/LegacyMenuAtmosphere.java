@@ -13,7 +13,7 @@ final class LegacyMenuAtmosphere {
     private final Shape window;
     private LegacyTextureRain textureRain;
     private BufferedImage stormGlow;
-    private final ClockGlassEffect glassEffect = new ClockGlassEffect();
+    private final LegacyClockGlassEffect glassEffect = new LegacyClockGlassEffect();
     LegacyMenuAtmosphere(MenuImageAssets images) {
         lit=images.get("menu_background.png");unlit=images.get("menu_unlit.png");
         // Only exposed panes: keep moving water and storm light off mullions and props.

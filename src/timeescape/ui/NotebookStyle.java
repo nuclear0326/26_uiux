@@ -1,9 +1,7 @@
 package timeescape.ui;
-import java.awt.*;import java.awt.image.BufferedImage;import java.util.Random;import javax.swing.*;
+import java.awt.*;import java.awt.image.BufferedImage;import javax.swing.*;
 final class NotebookStyle {
  static final Color INK=new Color(55,40,25),LINE=new Color(153,125,85),PAPER=new Color(233,217,183);
- private static final BufferedImage GRAIN=new BufferedImage(128,128,BufferedImage.TYPE_INT_RGB);
- static {Random r=new Random(40);for(int y=0;y<128;y++)for(int x=0;x<128;x++){int d=r.nextInt(13)-6;GRAIN.setRGB(x,y,new Color(233+d,217+d,183+d).getRGB());}}
  static final BufferedImage PAPER_IMAGE=load("paper.png");
  static BufferedImage load(String name){try(var in=NotebookStyle.class.getResourceAsStream("/assets/images/notebook/"+name)){if(in==null)throw new IllegalStateException(name);return javax.imageio.ImageIO.read(in);}catch(java.io.IOException e){throw new IllegalStateException(e);}}
  static class Paper extends JPanel {

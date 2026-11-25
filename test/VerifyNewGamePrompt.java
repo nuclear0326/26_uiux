@@ -6,6 +6,7 @@ public class VerifyNewGamePrompt {
  public static void main(String[] args)throws Exception{Files.createDirectories(Path.of("outputs/v57-newgame"));SwingUtilities.invokeAndWait(()->{try{
   GameFonts.installDefaults();int[] starts={0},prompts={0};GameMenuOverlay[] holder={null};
   MainMenuPanel menu=new MainMenuPanel(new MainMenuPanel.MenuActions(){public boolean confirmNewGame(){prompts[0]++;holder[0].open("newgame");return false;}public void startGame(){starts[0]++;}public void continueGame(){}public void showSettings(){}public void exitGame(){}});
+  menu.prepareEffects().join();
   menu.setTransitionAnimation(false);menu.setSize(1440,810);
   GameMenuOverlay popup=new GameMenuOverlay(menu,()->holder[0].release(),()->{},()->{});holder[0]=popup;popup.setNewGameAction(menu::startConfirmedNewGame);popup.setSize(1440,810);
   var activate=MainMenuPanel.class.getDeclaredMethod("activate",int.class);activate.setAccessible(true);

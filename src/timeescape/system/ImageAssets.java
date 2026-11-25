@@ -10,11 +10,11 @@ import timeescape.model.Era;
 
 /** src/assets/images 내의 실사 배경을 읽는다. 이미지 교체 시 파일명만 유지하면 된다. */
 public final class ImageAssets {
-    private static final Map<Era, BufferedImage> CACHE = new EnumMap<>(Era.class);
+    private static final Map<Era, BufferedImage> CACHE = new java.util.concurrent.ConcurrentHashMap<>();
     private ImageAssets() { }
 
     private static BufferedImage presentOff;
-    public static BufferedImage presentOff() {
+    public static synchronized BufferedImage presentOff() {
         if (presentOff == null) {
             try (InputStream in = ImageAssets.class.getResourceAsStream("/assets/images/present_off.png")) {
                 if (in == null) throw new IllegalStateException("소등 배경 없음");

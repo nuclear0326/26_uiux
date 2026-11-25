@@ -4,7 +4,17 @@ import java.awt.Font;import javax.swing.UIManager;import javax.swing.plaf.FontUI
 public final class GameFonts {
  private static final Font TITLE=load("NotoSerifKR-SemiBold.otf"),BODY=load("Pretendard-Regular.ttf"),BUTTON=load("Pretendard-SemiBold.ttf");
  private GameFonts(){}
- private static Font load(String name){try(var in=GameFonts.class.getResourceAsStream("/assets/fonts/"+name)){
+ private static Font load(String name){
+  // Windows distribution uses the identical original font files beside the JAR.
+  // File loading avoids inflating and copying 30 MB to temporary font files.
+  try{
+   var location=java.nio.file.Path.of(GameFonts.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+   if(java.nio.file.Files.isRegularFile(location)){
+    var font=location.getParent().resolve("fonts").resolve(name);
+    if(java.nio.file.Files.isRegularFile(font))return Font.createFont(Font.TRUETYPE_FONT,font.toFile());
+   }
+  }catch(java.net.URISyntaxException|java.io.IOException|java.awt.FontFormatException e){throw new IllegalStateException("Cannot read packaged font "+name,e);}
+  try(var in=GameFonts.class.getResourceAsStream("/assets/fonts/"+name)){
   if(in==null)throw new IllegalStateException("Missing font: "+name);
   return Font.createFont(Font.TRUETYPE_FONT,in);
  }catch(Exception e){throw new IllegalStateException("Cannot load bundled font "+name,e);}}

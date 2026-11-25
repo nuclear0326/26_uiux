@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-  <name>uix_v79</name>
+  <name>uix_v82</name>
   <comment>Java Swing 3 eras escape game - inventory time device and PC minigame</comment>
   <projects></projects>
   <buildSpec><buildCommand><name>org.eclipse.jdt.core.javabuilder</name><arguments></arguments></buildCommand></buildSpec>

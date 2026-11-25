@@ -37,7 +37,6 @@ public final class GameAudio {
     private volatile double transitionSeconds = -1;
     private boolean transitionActive;
     private boolean fading;
-    private long clockRestoreAt;
     private final boolean disabled;
     private String currentScene = "";
     private Clip terminal;
@@ -45,9 +44,12 @@ public final class GameAudio {
     private Clip menuStart;
     private final java.util.concurrent.CopyOnWriteArrayList<Clip> effects = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final java.util.Map<String, Long> lastEffects = new java.util.HashMap<>();
-    private boolean clockSpinning;
     private boolean inPuzzle;
     private boolean muted;
+    private final long[] recoveryDelays;
+    private long sceneGeneration;
+    private String sceneBgm, sceneAmbience;
+    private ScheduledFuture<?> sceneRetry, transitionRetry;
 
     private GameAudio() {
         this(null, java.awt.GraphicsEnvironment.isHeadless());
@@ -55,6 +57,10 @@ public final class GameAudio {
 
     // Package-private injection keeps verification entirely silent, with no audio device access.
     GameAudio(Function<String, Clip> factory, boolean disabled) {
+        this(factory, disabled, new long[]{150,400,1000,2000});
+    }
+    GameAudio(Function<String, Clip> factory, boolean disabled, long[] recoveryDelays) {
+        this.recoveryDelays = recoveryDelays.clone();
         this.disabled = disabled;
         clipFactory = factory == null ? this::readClip : factory;
         audio = new ScheduledThreadPoolExecutor(1, r -> {
@@ -91,9 +97,6 @@ public final class GameAudio {
         return c;
     }
     private void pollClock() {
-        if(clockSpinning && System.nanoTime() >= clockRestoreAt) {
-            clockSpinning=false; refreshTrackGains();
-        }
         if(!transitionActive) return;
         Clip c=menuStart;
         double seconds=-1;
@@ -106,26 +109,33 @@ public final class GameAudio {
 
     private static final class Track {
         final Clip clip;
-        final boolean clock;
+        final String path;
         float target;
         float gain;
-        Track(Clip clip, float target, boolean clock) { this.clip = clip; this.target = target; this.clock = clock; }
+        Track(Clip clip, float target, String path) { this.clip = clip; this.target = target; this.path = path; }
     }
 
     private Clip readClip(String path) {
+        String stage="resource", format="unknown";
         try (InputStream raw = getClass().getResourceAsStream(ROOT + path)) {
             if (raw == null) {
                 System.err.println("Audio resource missing: " + path);
                 return null;
             }
+            stage="decode";
             try (AudioInputStream stream = AudioSystem.getAudioInputStream(new BufferedInputStream(raw))) {
-                Clip clip = AudioSystem.getClip();
+                format=stream.getFormat().toString();stage="select-line";
+                // Request the original WAV format, not getClip()'s unspecified stereo template.
+                var info=new javax.sound.sampled.DataLine.Info(Clip.class,stream.getFormat());
+                Clip clip = (Clip) AudioSystem.getLine(info);
+                stage="open-line";
                 try { clip.open(stream); } catch (Exception failure) { clip.close(); throw failure; }
                 return clip;
             }
         } catch (Exception ex) {
             // NullAudio fallback: Linux CI, headless, or unavailable Windows device.
-            System.err.println("Audio unavailable (" + path + "): " + ex.getClass().getSimpleName());
+            System.err.println("Audio unavailable (" + path + ", stage="+stage+", format="+format+"): " + ex.getClass().getSimpleName()+": "+ex.getMessage());
+            if (Boolean.getBoolean("timeescape.audioDiagnostics")) ex.printStackTrace();
             return null;
         }
     }
@@ -141,18 +151,19 @@ public final class GameAudio {
         }
     }
 
-    private void loop(String path, float volume) {
+    private boolean loop(String path, float volume) {
+        for(Track t:tracks)if(t.path.equals(path)&&t.target>0&&t.clip.isOpen())return true;
         Clip c = openClip(path);
-        if (c == null) return;
-        Track t = new Track(c, volume, path.equals("ambience/clockwork.wav"));
-        t.gain = 0;
-        tracks.add(t);
-        setGain(c, 0);
-        c.loop(Clip.LOOP_CONTINUOUSLY);
+        if (c == null) return false;
+        try {
+            setGain(c, 0);c.loop(Clip.LOOP_CONTINUOUSLY);
+            Track t = new Track(c, volume, path);t.gain=0;tracks.add(t);fading=true;
+            return true;
+        } catch(RuntimeException error) { c.close();return false; }
     }
 
     private float trackVolume(Track t) {
-        return t.gain * (inPuzzle ? .45f : 1f) * (t.clock && clockSpinning ? .12f : 1f);
+        return t.gain * (inPuzzle ? .45f : 1f);
     }
 
     private void refreshTrackGains() {
@@ -175,22 +186,36 @@ public final class GameAudio {
     }
 
     private void changeScene(String scene, String bgm, String ambience) {
-        if (scene.equals(currentScene)) return;
-        currentScene = scene;
-        for (Track t : tracks) t.target = 0f;
-        // Gently crossfade the old era out while the new era fades in.
-        loop("bgm/" + bgm + ".wav", BGM_VOLUME);
-        if (ambience != null) loop("ambience/" + ambience + ".wav", AMBIENCE_VOLUME);
-        if ("MENU".equals(scene)) loop("ambience/rain.wav", .18f);
-        fading = true;
+        if(!scene.equals(currentScene)){
+            currentScene=scene;
+            for(Track t:tracks)t.target=0f;
+            fading=true;
+        }
+        sceneBgm="bgm/"+bgm+".wav";
+        sceneAmbience="MENU".equals(scene)?"ambience/rain.wav":ambience==null?null:"ambience/"+ambience+".wav";
+        if(sceneRetry!=null)sceneRetry.cancel(false);
+        prepareScene(++sceneGeneration,0);
+    }
+    /** Retry only persistent scene/preloaded sounds, never a late one-shot effect. */
+    private void prepareScene(long generation,int attempt){
+        if(closed.get()||generation!=sceneGeneration)return;
+        boolean ready=true;
+        if("MENU".equals(currentScene)){
+            if(menuStart==null||!menuStart.isOpen())menuStart=openClip("sfx/menu_start.wav");
+            ready=menuStart!=null;
+        }
+        if("MENU".equals(currentScene)||"PRESENT".equals(currentScene)){
+            if(menuThunder==null||!menuThunder.isOpen())menuThunder=openClip("sfx/menu_thunder.wav");
+            ready=(menuThunder!=null)&&ready;
+        }
+        ready=loop(sceneBgm,BGM_VOLUME)&&ready;
+        if(sceneAmbience!=null)ready=loop(sceneAmbience,"MENU".equals(currentScene)?.18f:AMBIENCE_VOLUME)&&ready;
+        if(!ready&&attempt<recoveryDelays.length&&!closed.get())
+            sceneRetry=audio.schedule(()->safely(()->prepareScene(generation,attempt+1)),recoveryDelays[attempt],TimeUnit.MILLISECONDS);
+        else if(!ready&&!closed.get())System.err.println("Audio scene preparation exhausted retries: "+currentScene);
     }
 
-    public void menu() { enqueue(() -> {
-        // Prime timing-critical sounds before playback; subsequent triggers perform no file IO.
-        if(menuStart==null || !menuStart.isOpen()) menuStart=openClip("sfx/menu_start.wav");
-        if(menuThunder==null || !menuThunder.isOpen()) menuThunder=openClip("sfx/menu_thunder.wav");
-        changeScene("MENU", "menu", null);
-    }); }
+    public void menu() { enqueue(() -> changeScene("MENU", "menu", null)); }
 
     public void era(Era era) { enqueue(() -> changeEra(era)); }
     private void changeEra(Era era) {
@@ -223,21 +248,29 @@ public final class GameAudio {
         if(disabled || closed.get()) { transitionSeconds=-1; return; }
         transitionSeconds=-2;
         enqueue(() -> {
-            if(generation!=transitionGeneration.get()) return;
-            transitionActive=false;
-            if(menuStart==null || !menuStart.isOpen()) menuStart=openClip("sfx/menu_start.wav");
-            if(generation!=transitionGeneration.get() || closed.get()) return;
-            if(menuStart==null) { transitionSeconds=-1; return; }
-            try {
-                menuStart.stop(); menuStart.setFramePosition(0); setGain(menuStart,1f);
-                menuStart.start(); transitionSeconds=0; transitionActive=true;
-            } catch(RuntimeException e) { transitionSeconds=-1; transitionActive=false; }
+            if(transitionRetry!=null)transitionRetry.cancel(false);
+            prepareTransition(generation,0);
         });
+    }
+    private void prepareTransition(long generation,int attempt){
+        if(generation!=transitionGeneration.get()||closed.get())return;
+        transitionActive=false;
+        if(menuStart==null||!menuStart.isOpen())menuStart=openClip("sfx/menu_start.wav");
+        if(generation!=transitionGeneration.get()||closed.get())return;
+        if(menuStart!=null){
+            try{
+                menuStart.stop();menuStart.setFramePosition(0);setGain(menuStart,1f);
+                menuStart.start();transitionSeconds=0;transitionActive=true;return;
+            }catch(RuntimeException error){menuStart.close();menuStart=null;}
+        }
+        if(attempt<recoveryDelays.length)
+            transitionRetry=audio.schedule(()->safely(()->prepareTransition(generation,attempt+1)),recoveryDelays[attempt],TimeUnit.MILLISECONDS);
+        else transitionSeconds=-1; // Device unavailable: keep the existing silent UI fallback.
     }
     public double menuTransitionSeconds() { return transitionSeconds; }
     public void stopMenuTransition() {
         transitionGeneration.incrementAndGet(); transitionSeconds=-1;
-        enqueue(() -> { transitionActive=false; if(menuStart!=null) { menuStart.stop(); menuStart.setFramePosition(0); } });
+        enqueue(() -> { if(transitionRetry!=null)transitionRetry.cancel(false); transitionActive=false; if(menuStart!=null) { menuStart.stop(); menuStart.setFramePosition(0); } });
     }
 
     public void play(String effect) { enqueue(() -> playEffect(effect)); }
@@ -259,11 +292,6 @@ public final class GameAudio {
         Clip c = openClip("sfx/" + effect + ".wav");
         if (c == null) return;
         effects.add(c);
-        if ("clock_spin".equals(effect)) {
-            clockSpinning = true;
-            refreshTrackGains();
-            clockRestoreAt = System.nanoTime() + 1_900_000_000L;
-        }
         setGain(c, SFX_VOLUME);
         c.addLineListener(event -> {
             if (event.getType() == LineEvent.Type.STOP) {
@@ -280,12 +308,13 @@ public final class GameAudio {
         audio.shutdown();
     }
     private void closeAll() {
+        sceneGeneration++;
+        if(sceneRetry!=null)sceneRetry.cancel(false);
+        if(transitionRetry!=null)transitionRetry.cancel(false);
         if(menuThunder!=null){menuThunder.stop();menuThunder.close();menuThunder=null;}
         transitionActive=false;
         if(menuStart!=null){menuStart.stop();menuStart.close();menuStart=null;}
         fading = false;
-        clockRestoreAt=0;
-        clockSpinning = false;
         inPuzzle = false;
         for (Clip effect : effects) { effect.stop(); effect.close(); }
         effects.clear();

@@ -9,14 +9,28 @@ import timeescape.system.MenuImageAssets;
 /** Layered laboratory menu. Coordinates are independent of button hit testing. */
 final class MenuAtmosphere {
     static final double CX=1263, CY=428, RX=128, RY=146;
-    private final BufferedImage lit, unlit;
-    private TextureRain textureRain;
-    private BufferedImage stormGlow;
-    private final ClockGlassEffect glassEffect = new ClockGlassEffect();
-    MenuAtmosphere(MenuImageAssets images) {
-        lit=images.get("menu_background.png");unlit=images.get("menu_unlit.png");
-        textureRain=new TextureRain();
-        stormGlow=images.get("menu_storm_glow.png");
+    private final BufferedImage lit;
+    private final TextureRain textureRain;
+    private record Effects(BufferedImage unlit,BufferedImage stormGlow,ClockGlassEffect glassEffect){}
+    private volatile Effects effects;
+    private java.util.concurrent.CompletableFuture<Void> preparation;
+    MenuAtmosphere(MenuImageAssets images){this(images,false);}
+    MenuAtmosphere(MenuImageAssets images,boolean deferred) {
+        lit=images.get("menu_background.png");textureRain=new TextureRain();
+        if(!deferred)prepare().join();
+    }
+    synchronized java.util.concurrent.CompletableFuture<Void> prepare(){
+        if(preparation==null){
+            preparation=new java.util.concurrent.CompletableFuture<>();
+            var result=preparation;
+            Thread worker=new Thread(()->{try{
+                var images=new MenuImageAssets();
+                effects=new Effects(images.get("menu_unlit.png"),images.get("menu_storm_glow.png"),new ClockGlassEffect());
+                result.complete(null);
+            }catch(Throwable e){result.completeExceptionally(e);}},"time-escape-menu-preparation");
+            worker.setDaemon(true);worker.start();
+        }
+        return preparation;
     }
     void reset(){ /* Effect is deterministic and has no per-play state. */ }
     static double clockSeconds(){LocalTime t=LocalTime.now();return t.toSecondOfDay()+t.getNano()/1e9;}
@@ -34,14 +48,15 @@ final class MenuAtmosphere {
         textureRain.draw(g,t);
         double dip=0; // Preserve the approved stationary weather composition.
         if(departure>=0)dip=startLampDarkness(departure);
-        g.setComposite(AlphaComposite.SrcOver.derive((float)dip));g.drawImage(unlit,0,0,1600,900,null);g.setComposite(AlphaComposite.SrcOver);
+        Effects ready=effects;
+        if(dip>0 && ready!=null){g.setComposite(AlphaComposite.SrcOver.derive((float)dip));g.drawImage(ready.unlit(),0,0,1600,900,null);g.setComposite(AlphaComposite.SrcOver);}
         drawHands(g,clockTime);
-        if(departure>=MenuStartTimeline.BREAK_AT)glassEffect.draw(g,departure-MenuStartTimeline.BREAK_AT);
+        if(ready!=null && departure>=MenuStartTimeline.BREAK_AT)ready.glassEffect().draw(g,departure-MenuStartTimeline.BREAK_AT);
         double flash=flash(lightningAge);
-        if(flash>0&&departure<0){
+        if(ready!=null&&flash>0&&departure<0){
             Graphics2D sky=(Graphics2D)g.create();
             sky.setComposite(AlphaComposite.SrcOver.derive((float)flash));
-            sky.drawImage(stormGlow,0,0,null);sky.dispose();
+            sky.drawImage(ready.stormGlow(),0,0,null);sky.dispose();
         }
         g.dispose();
         if(departure>=MenuStartTimeline.FADE_AT){canvas.setColor(new Color(0,0,0,(int)(255*Math.min(1,(departure-MenuStartTimeline.FADE_AT)/.8))));canvas.fillRect(0,0,1600,900);}

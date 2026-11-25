@@ -30,6 +30,7 @@ public final class InventoryPanel extends JPanel implements Scrollable {
   row.setName(id);row.setToolTipText(title+" — "+detail);row.getAccessibleContext().setAccessibleName(title);row.getAccessibleContext().setAccessibleDescription(detail);row.setPreferredSize(new Dimension(310,146));row.setMinimumSize(new Dimension(0,146));row.setMaximumSize(new Dimension(Integer.MAX_VALUE,146));row.setAlignmentX(LEFT_ALIGNMENT);row.setOpaque(false);row.setContentAreaFilled(false);row.setBorderPainted(false);row.setFocusPainted(false);row.setCursor(GameCursors.interact());row.addActionListener(e->{if(interactionAllowed.getAsBoolean())onClick.accept(id);});add(row);
  }
  static int wrap(Graphics2D g,String text,int x,int y,int width,int line){StringBuilder current=new StringBuilder();for(char ch:text.toCharArray()){if(g.getFontMetrics().stringWidth(current.toString()+ch)>width&&current.length()>0){g.drawString(current.toString(),x,y);current.setLength(0);y+=line;}current.append(ch);}if(current.length()>0){g.drawString(current.toString(),x,y);y+=line;}return y;}
+ static void prepareImages(){if(ATLAS==null)throw new IllegalStateException("Missing item atlas");}
  private static final java.awt.image.BufferedImage ATLAS=NotebookStyle.load("items.png");
  private static final java.util.Map<String,java.awt.image.BufferedImage> ICONS=new java.util.HashMap<>();
  static void paintItem(Graphics2D g,String id,int x,int y){
