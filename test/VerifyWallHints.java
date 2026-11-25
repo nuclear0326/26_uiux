@@ -10,10 +10,10 @@ public class VerifyWallHints {
  static int count;
  static void check(boolean b){count++;if(!b)throw new AssertionError("check "+count);}
  static void render(GameScenePanel panel,String name)throws Exception{
-  panel.setSize(1440,810);var image=new BufferedImage(1440,810,BufferedImage.TYPE_INT_RGB);var g=image.createGraphics();panel.paint(g);g.dispose();ImageIO.write(image,"png",Path.of("outputs/v18-preview/"+name+".png").toFile());
+  panel.setSize(1440,810);var image=new BufferedImage(1440,810,BufferedImage.TYPE_INT_RGB);var g=image.createGraphics();panel.paint(g);g.dispose();ImageIO.write(image,"png",timeescape.testutil.ArtifactPaths.output("v18-preview/"+name+".png").toFile());
  }
  public static void main(String[] args)throws Exception{
-  Files.createDirectories(Path.of("outputs/v18-preview"));
+  Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v18-preview"));
   SwingUtilities.invokeAndWait(()->{try{
    var clicks=new java.util.ArrayList<String>();var p=new GameScenePanel(clicks::add);p.setEra(Era.PRESENT);
    var timerField=GameScenePanel.class.getDeclaredField("hoverTimer");timerField.setAccessible(true);Timer timer=(Timer)timerField.get(p);

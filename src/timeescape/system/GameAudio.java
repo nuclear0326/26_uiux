@@ -52,6 +52,9 @@ public final class GameAudio {
     private final java.util.Map<String, Long> lastEffects = new java.util.HashMap<>();
     private boolean inPuzzle;
     private boolean muted;
+    private final java.util.Map<Clip,AudioSettings.Channel> channels=new java.util.IdentityHashMap<>();
+    private final java.util.Map<Clip,Float> baseGains=new java.util.IdentityHashMap<>();
+    public void refreshVolumes(){enqueue(()->{for(var entry:new java.util.ArrayList<>(baseGains.entrySet())){if(entry.getKey().isOpen())setGain(entry.getKey(),entry.getValue());else{baseGains.remove(entry.getKey());channels.remove(entry.getKey());}}});}
     private final long[] recoveryDelays;
     private long sceneGeneration;
     private String sceneBgm, sceneAmbience;
@@ -73,6 +76,7 @@ public final class GameAudio {
             Thread t = new Thread(r, "time-escape-audio"); t.setDaemon(true); return t;
         });
         audio.setRemoveOnCancelPolicy(true);
+        AudioSettings.get().ready().thenRun(this::refreshVolumes);
         audio.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         audio.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
         if (!disabled) {
@@ -100,6 +104,7 @@ public final class GameAudio {
             return null;
         }
         if(closed.get() && c != null) { c.close(); return null; }
+        if(c!=null){channels.entrySet().removeIf(e->!e.getKey().isOpen());baseGains.entrySet().removeIf(e->!e.getKey().isOpen());channels.put(c,path.startsWith("bgm/")?AudioSettings.Channel.BGM:path.startsWith("ambience/")?AudioSettings.Channel.AMBIENCE:AudioSettings.Channel.SFX);}
         return c;
     }
     private void pollClock() {
@@ -152,7 +157,10 @@ public final class GameAudio {
 
     private void setGain(Clip clip, float volume) {
         if (clip == null || !clip.isOpen()) return;
+        baseGains.put(clip,volume);
+        volume *= AudioSettings.get().multiplier(channels.getOrDefault(clip,AudioSettings.Channel.SFX));
         try {
+            if(clip.isControlSupported(javax.sound.sampled.BooleanControl.Type.MUTE))((javax.sound.sampled.BooleanControl)clip.getControl(javax.sound.sampled.BooleanControl.Type.MUTE)).setValue(muted||volume==0);
             FloatControl master = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
             float db = (float) (20.0 * Math.log10(Math.max(0.0001, muted ? 0 : volume)));
             master.setValue(Math.max(master.getMinimum(), Math.min(master.getMaximum(), db)));

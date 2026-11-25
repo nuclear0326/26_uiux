@@ -15,7 +15,7 @@ public class VerifySaveSlots {
             if(!slots.load(Slot.THREE).state().powered()||!slots.load(Slot.FOUR).state().done("PZ006"))throw new AssertionError("manual 3/4 process restore");
             return;
         }
-        Path dir=Files.createTempDirectory(Path.of("outputs/v54-release-tests"),"slots-");
+        Path dir=Files.createTempDirectory(timeescape.testutil.ArtifactPaths.output("v54-release-tests"),"slots-");
         SaveSlots slots=new SaveSlots(dir,ProgressCatalog.standard());
         check(!slots.hasAny(),"empty slots");
         check(slots.summaries().stream().map(SaveSlots.Summary::slot).toList().equals(List.of(Slot.AUTO,Slot.ONE,Slot.TWO,Slot.THREE,Slot.FOUR)),"automatic slot first");

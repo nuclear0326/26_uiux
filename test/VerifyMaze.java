@@ -8,12 +8,12 @@ import javax.imageio.ImageIO;
 public final class VerifyMaze {
  static void check(boolean ok,String message){if(!ok)throw new AssertionError(message);}
  public static void main(String[] args)throws Exception{
-  Path root=Path.of(args[0]),out=Path.of(args[1]);Files.createDirectories(out);
+  Path root=args.length>0?Path.of(args[0]):Path.of(""),out=args.length>1?Path.of(args[1]):timeescape.testutil.ArtifactPaths.output("maze-validation");Files.createDirectories(out);
   for(boolean hard:new boolean[]{false,true}){
    String name=hard?"hard":"easy";Wires w=new Wires(hard);
    render(w,out.resolve("maze_"+name+".png"));
-   // Old straight-lane strategy connects all pairs but must NOT win anymore.
-   for(int i=0;i<w.rows.length;i++){w.begin(i);for(int x=4;x<=17;x++)check(w.step(i,new Point(x,w.rows[i])),"straight fixture");}
+   // Straight lanes must not bypass current maze walls or full-coverage rules.
+   for(int i=0;i<w.rows.length;i++){w.begin(i);for(int x=4;x<=17;x++)if(!w.step(i,new Point(x,w.rows[i])))break;}
    check(!w.solved(),"Incomplete coverage accepted");
    w=new Wires(hard);
    var lines=Files.readAllLines(root.resolve("test/fixtures/wires_"+name+"_solution.txt"));
@@ -45,7 +45,9 @@ public final class VerifyMaze {
    w.undo(0);check(!w.solved(),"undo did not reset win");
    check(w.step(0,w.end(0))&&w.solved(),"reconnect");
    w.begin(0);check(!w.solved()&&w.paths.get(0).size()==1,"restart line");
-   check(w.extend(0,new Point(6,w.rows[0]))&&w.paths.get(0).size()==4,"drag interpolation");
+   var route=solutions.get(0);Point start=route.get(0),next=route.get(1);int dx=next.x-start.x,dy=next.y-start.y,end=1;
+   while(end+1<route.size()&&route.get(end+1).x-route.get(end).x==dx&&route.get(end+1).y-route.get(end).y==dy)end++;
+   check(w.extend(0,route.get(end))&&w.paths.get(0).size()==end+1,"drag interpolation");
    check(w.extend(0,w.start(0))&&w.paths.get(0).size()==1,"drag undo");
    check(!new Wires(false).solved(),"fresh stage");
    System.out.println(name+": solution + full coverage, walls="+wallChecks+", overlaps="+overlapChecks+", undo/restart/interpolation passed; cells="+w.totalCells());

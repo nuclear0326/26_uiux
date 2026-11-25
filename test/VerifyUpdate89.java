@@ -13,8 +13,8 @@ public final class VerifyUpdate89 {
    ok(runner.run("PZ004")==PuzzleRunner.Outcome.COMPLETED&&s.powered()&&saved[0]==1,"power and autosave once");ok(store.load().orElseThrow().state().powered(),"restored power");
    GameFonts.installDefaults();var scene=new GameScenePanel(id->{});scene.setEra(timeescape.model.Era.PRESENT);scene.restorePowered(true);var missions=new MissionPanel();var inv=new InventoryPanel(id->{});var hud=new GameHud(scene,missions,inv,()->{},()->{},()->{});
    hud.showOpeningTutorial(java.util.List.of("첫 안내"));ok(hud.dialogue.isVisible()&&!hud.gameMenu.isVisible(),"dialogue first");hud.dialogue.revealAll();hud.dialogue.advance();ok(hud.gameMenu.isVisible()&&hud.gameMenu.helpContent.isVisible(),"help after tutorial");hud.closeGameMenu();ok(!hud.gameMenu.isVisible(),"help closes");hud.showDialogue(java.util.List.of("일반 안내"));hud.dialogue.revealAll();hud.dialogue.advance();ok(!hud.gameMenu.isVisible(),"ordinary dialogue does not reopen help");hud.openHelp();
-   Files.createDirectories(Path.of("outputs/v89-preview"));
-   hud.setSize(1484,842);layout(hud);layout(hud);var img=new BufferedImage(1484,842,BufferedImage.TYPE_INT_RGB);var g=img.createGraphics();hud.printAll(g);g.dispose();ImageIO.write(img,"png",Path.of("outputs/v89-preview/help.png").toFile());
+   Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v89-preview"));
+   hud.setSize(1484,842);layout(hud);layout(hud);var img=new BufferedImage(1484,842,BufferedImage.TYPE_INT_RGB);var g=img.createGraphics();hud.printAll(g);g.dispose();ImageIO.write(img,"png",timeescape.testutil.ArtifactPaths.output("v89-preview/help.png").toFile());
    hud.removeNotify();System.out.println("PASS "+checks+" release saves, wiring stages, completion and tutorial checks");
   }catch(Exception e){throw new RuntimeException(e);}});
  }

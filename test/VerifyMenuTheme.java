@@ -4,9 +4,9 @@ public class VerifyMenuTheme {
  static int checks;static void check(boolean b){checks++;if(!b)throw new AssertionError("check "+checks);}
  static java.lang.reflect.Field f(String n)throws Exception{var f=MainMenuPanel.class.getDeclaredField(n);f.setAccessible(true);return f;}
  static void call(MainMenuPanel p,String name,Class<?> type,Object value)throws Exception{var m=MainMenuPanel.class.getDeclaredMethod(name,type);m.setAccessible(true);m.invoke(p,value);}
- static void render(MainMenuPanel p,String name)throws Exception{var im=new BufferedImage(1440,810,BufferedImage.TYPE_INT_RGB);var g=im.createGraphics();p.paint(g);g.dispose();ImageIO.write(im,"png",Path.of("outputs/v39-preview/"+name+".png").toFile());}
+ static void render(MainMenuPanel p,String name)throws Exception{var im=new BufferedImage(1440,810,BufferedImage.TYPE_INT_RGB);var g=im.createGraphics();p.paint(g);g.dispose();ImageIO.write(im,"png",timeescape.testutil.ArtifactPaths.output("v39-preview/"+name+".png").toFile());}
  public static void main(String[] args)throws Exception{
- Files.createDirectories(Path.of("outputs/v39-preview/idle"));Files.createDirectories(Path.of("outputs/v39-preview/start"));
+ Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v39-preview/idle"));Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v39-preview/start"));
  SwingUtilities.invokeAndWait(()->{try{
   int[] count=new int[4];var p=new MainMenuPanel(new MainMenuPanel.MenuActions(){public void startGame(){count[0]++;}public void continueGame(){count[1]++;}public void showSettings(){count[2]++;}public void exitGame(){count[3]++;}});p.setSize(1440,810);
   check(!((Timer)f("refreshTimer").get(p)).isRunning());

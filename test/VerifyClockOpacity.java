@@ -3,10 +3,10 @@ import timeescape.system.MenuImageAssets;import java.awt.image.BufferedImage;imp
 public class VerifyClockOpacity {
  public static void main(String[] args)throws Exception{
   var scene=new MenuAtmosphere(new MenuImageAssets());
-  BufferedImage[] frames=new BufferedImage[2];Files.createDirectories(Path.of("outputs/v39-clock-check"));
+  BufferedImage[] frames=new BufferedImage[2];Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v39-clock-check"));
   for(int i=0;i<2;i++){
    var im=new BufferedImage(1600,900,BufferedImage.TYPE_INT_RGB);var g=im.createGraphics();scene.draw(g,0,-100,i==0?-1:4.2,0);g.dispose();frames[i]=im;
-   ImageIO.write(im,"png",Path.of("outputs/v39-clock-check/"+(i==0?"lit":"unlit")+".png").toFile());
+   ImageIO.write(im,"png",timeescape.testutil.ArtifactPaths.output("v39-clock-check/"+(i==0?"lit":"unlit")+".png").toFile());
   }
   for(int yy:new int[]{330,350,370,390}){
    int x=(int)Math.round(800+(1263-800)*1.018),y=(int)Math.round(450+(yy-450)*1.018);

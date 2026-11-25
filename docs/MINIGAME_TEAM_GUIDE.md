@@ -1,6 +1,6 @@
 # TIME ESCAPE 팀원용 미니게임 개발 가이드
 
-기준: v65 / Java 21 / Swing + Java2D
+기준: 2026-11-26 작업 트리 / v92 / Java 21 / Swing + Java2D
 
 이 문서는 새 미니게임을 만드는 팀원과 게임에 연결하는 통합 담당자를 위한 가이드입니다. 예제는 `docs/examples/frequency`에만 보관하며 현재 게임 진행에는 등록하지 않았습니다.
 
@@ -99,7 +99,7 @@ ID는 표시 순서와 다릅니다. order를 바꾸더라도 ID는 유지합니
 - 자체 닫기 버튼과 Esc를 연결합니다. System.exit()는 사용하지 않습니다.
 - DeveloperMode.bind()는 임시 개발 빌드의 Shift+8+9+0을 연결합니다. 배선 퍼즐은 단계별 스킵을 사용합니다. 정식 배포 전 TEMPORARY_PUZZLE_CHEAT를 false로 변경하세요.
 
-현재 RepairPuzzlePanel.build()는 시계 제목 여부에 따라 과거/미래 설명을 선택합니다. 새 퍼즐에 그대로 상속하면 잘못된 부제목이 나올 수 있습니다. 예제는 이 부분을 복사하지 않고 PuzzleChrome을 직접 사용합니다. 기존 수리 패널을 확장하려면 통합 담당자가 context를 인자로 받도록 일반화한 뒤 사용하세요.
+현재 RepairPuzzlePanel.build()는 시계 제목 여부에 따라 과거 시계/현재 배전함 설명을 선택합니다. 새 퍼즐에 그대로 상속하면 잘못된 부제목이 나올 수 있습니다. 예제는 이 부분을 복사하지 않고 PuzzleChrome을 직접 사용합니다. 기존 수리 패널을 확장하려면 통합 담당자가 context를 인자로 받도록 일반화한 뒤 사용하세요.
 
 ## 5. 공통 디자인 사용 방법
 
@@ -183,7 +183,7 @@ step.PZ001.requires=PZ012
 
 ### 기존 저장 데이터 주의
 
-완료한 ID와 아이템 중심의 저장 구조는 새 퍼즐마다 바꿀 필요가 없습니다. 다만 기존 단계 중간에 새 필수 퍼즐을 넣으면 이미 그 구간을 지난 저장 파일의 진행 규칙이 달라질 수 있습니다. 새 게임과 기존 저장 불러오기를 모두 확인하고, 기존 플레이어에게 새 퍼즐을 요구할지 별도로 결정해야 합니다. 저장 파일을 임의로 초기화하지 마세요.
+완료한 ID와 아이템 중심의 저장 구조는 새 퍼즐마다 바꿀 필요가 없습니다. 다만 기존 단계 중간에 새 필수 퍼즐을 넣으면 이미 그 구간을 지난 저장 파일의 진행 규칙이 달라질 수 있습니다. 새 게임과 기존 저장 불러오기를 모두 확인하고, 기존 플레이어에게 새 퍼즐을 요구할지 별도로 결정해야 합니다. 저장 파일을 임의로 초기화하지 마세요. 배포본은 `jpackage.app-version`에 따른 버전별 저장소를 사용합니다. 이전 버전 저장을 삭제하는 방식으로 초기화하지 않습니다.
 
 ## 8. 개발 역할과 Git 작업
 
@@ -210,7 +210,7 @@ JDK 21과 JAVA_HOME 설정이 필요합니다. 저장소 루트 PowerShell에서
 전체 게임 빌드만 수행하며 게임 창은 열지 않는 명령:
 
 ```powershell
-& ./tools/build.ps1 -JavaHome $env:JAVA_HOME
+& ./tools/build.ps1 -JavaHome $env:JAVA_HOME -Version 92
 ```
 
 예제를 src로 복사하지 않고 검증하는 명령:
@@ -219,7 +219,7 @@ JDK 21과 JAVA_HOME 설정이 필요합니다. 저장소 루트 PowerShell에서
 & ./docs/examples/frequency/verify.ps1 -JavaHome $env:JAVA_HOME
 ```
 
-예제 검증은 프로젝트 소스와 예제를 별도 build 디렉터리에 컴파일합니다. 모델, 중복 완료, 취소 이후 완료 방지, 패널 헤드리스 렌더를 검사합니다. EXE와 JFrame/JDialog를 실행하지 않으며 사용자 저장 파일을 열지 않습니다. 예제를 src/test에 옮긴 뒤에는 중복 클래스가 되므로 이 예제 전용 스크립트 대신 정식 테스트 목록에 넣으세요.
+예제 검증은 프로젝트 소스와 예제를 저장소 외부 `../26_uiux_artifacts/build/team-guide-example`에 컴파일합니다. 모델, 중복 완료, 취소 이후 완료 방지, 패널 헤드리스 렌더를 검사합니다. EXE와 JFrame/JDialog를 실행하지 않으며 사용자 저장 파일을 열지 않습니다. 예제를 src/test에 옮긴 뒤에는 중복 클래스가 되므로 이 예제 전용 스크립트 대신 정식 테스트 목록에 넣으세요.
 
 ### 팀원 제출 체크리스트
 
@@ -256,3 +256,16 @@ JDK 21과 JAVA_HOME 설정이 필요합니다. 저장소 루트 PowerShell에서
 ```
 
 현재 예제는 기능 구현의 출발점입니다. 게임 등록과 저장 조건 변경은 포함하지 않습니다.
+
+## 현재 연결과 결과물 경로
+
+- 현재 배전함 `PZ004`: `wires`. 쉬움 다음 어려움을 완료해야 최종 보상과 저장을 처리합니다.
+- 과거 `PZ002`: `gears`. 미래 `PZ003`: `temporary_power`이며 `PZ004`용 전력 합계 모델을 재사용합니다. 실행 단계 ID와 재사용 모델 ID를 혼동하지 마세요.
+- 등록된 kind: present, gears, wires, temporary_power, rush_hour, confirm, action. `gate`는 진행 모델의 자동 단계이며 미니게임 창이 아닙니다.
+- 중간 페이지나 쉬움 완료를 `SOLVED`로 반환하지 않습니다. 최종 단계 완료만 공통 완료 처리로 전달합니다.
+- 배포 결과는 저장소 외부 `../26_uiux_artifacts/outputs`, 빌드는 같은 폴더의 `build`에 생성됩니다. Eclipse의 `bin`은 로컬 개발용으로 유지합니다.
+- 미리보기 검증은 `test/ArtifactPaths.java`를 함께 컴파일하고 `ArtifactPaths.output(...)`으로 결과를 저장합니다. 게임 JAR에는 테스트 도우미를 넣지 않습니다.
+- 경로 변경은 PowerShell의 `-ArtifactsRoot`, 패키징의 `--artifacts-root`, Java 검증의 `-Dtimeescape.artifactsRoot`에 같은 위치를 지정합니다.
+- [빌드·배포 안내](../tools/ARTIFACTS.md), [현재 진행](OPENING_TIMELINE.md), [조작키](TEMPORARY_CHEAT.md), [디자인 규칙](ui-design-guidelines.md)를 함께 참고하세요.
+
+테스트 실행과 정리된 폴더 구조: [테스트 안내](../test/README.md)를 참고하세요.

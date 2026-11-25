@@ -66,8 +66,9 @@ public final class GameState {
         if(id.equals("ACT_FIRST_TRAVEL"))return false; // Retired action retained for save hydration only.
         if (!introScenario() && (id.equals("TUT001") || id.equals("ACT_FIRST_TRAVEL") || id.equals("ACT_START_FAILURE"))) return false;
         if (introPresent() && !Set.of("TUT001", "ACT_START_FAILURE").contains(id)) return false;
-        // Later return-to-present and horizontal missions are intentionally not implemented yet.
-        if (introScenario() && Set.of("ACT_REPAIR", "GATE002").contains(id)) return false;
+        // Only the retired direct-to-past opening remains gated. The current failure
+        // scenario resumes normal repair and future unlock after reaching the past.
+        if (firstTravelComplete() && !prototypeFailed() && Set.of("ACT_REPAIR", "GATE002").contains(id)) return false;
         ProgressCatalog.Step step = catalog.steps().get(id);
         return step != null && !completed.contains(id) && roomId.equals(step.room())
             && (step.mission().isBlank() || !missionLocked(step.mission()))

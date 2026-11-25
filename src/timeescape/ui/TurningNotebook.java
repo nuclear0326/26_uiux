@@ -8,6 +8,10 @@ final class TurningNotebook extends NotebookStyle.Paper {
     private BufferedImage before,after;
     private float progress=1;
     private boolean reverse;
+    private double uiScale=1;
+    double uiScale(){return uiScale;}
+    void setUiScale(double value){if(Math.abs(uiScale-value)>.0001){finishTurn();uiScale=value;}NotebookScale.apply(this,uiScale);}
+    @Override public void doLayout(){NotebookScale.apply(this,uiScale);super.doLayout();}
     private long started;
     final Timer turnTimer=new Timer(16,e->setTurnProgress((float)((System.nanoTime()-started)/460_000_000.0)));
     void turnTo(Runnable change,boolean backwards,boolean animate){
@@ -18,17 +22,25 @@ final class TurningNotebook extends NotebookStyle.Paper {
         repaint();
     }
     private static void layoutTree(Container c){c.doLayout();for(Component child:c.getComponents())if(child instanceof Container n)layoutTree(n);}
-    private BufferedImage capture(){BufferedImage image=new BufferedImage(getWidth(),getHeight(),BufferedImage.TYPE_INT_ARGB);Graphics2D g=image.createGraphics();g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);super.paint(g);g.dispose();return image;}
+    private BufferedImage capture(){
+        double sx=1,sy=1;
+        if(getGraphicsConfiguration()!=null){var t=getGraphicsConfiguration().getDefaultTransform();sx=t.getScaleX();sy=t.getScaleY();}
+        return capture(sx,sy);
+    }
+    BufferedImage capture(double sx,double sy){
+        BufferedImage image=new BufferedImage((int)Math.ceil(getWidth()*sx),(int)Math.ceil(getHeight()*sy),BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g=image.createGraphics();g.scale(sx,sy);LabTheme.quality(g);super.paint(g);g.dispose();return image;
+    }
     void setTurnProgress(float value){progress=Math.max(0,Math.min(1,value));if(progress>=1)finishTurn();repaint();}
     void finishTurn(){turnTimer.stop();progress=1;before=null;after=null;repaint();}
     boolean isTurning(){return before!=null;}
     @Override public void paint(Graphics graphics){
-        if(before==null||after==null){super.paint(graphics);return;}
+        if(before==null||after==null){Graphics2D live=(Graphics2D)graphics.create();LabTheme.quality(live);super.paint(live);live.dispose();return;}
         Graphics2D g=(Graphics2D)graphics.create();LabTheme.quality(g);int w=getWidth()-5,h=getHeight()-6;
         float t=progress*progress*(3-2*progress);int remaining=Math.round(w*(1-t));
-        g.drawImage(after,0,0,null);
+        g.drawImage(after,0,0,getWidth(),getHeight(),null);
         int edge=reverse?w-remaining:remaining;
-        Graphics2D old=(Graphics2D)g.create();old.clipRect(reverse?edge:0,0,remaining,getHeight());old.drawImage(before,0,0,null);old.dispose();
+        Graphics2D old=(Graphics2D)g.create();old.clipRect(reverse?edge:0,0,remaining,getHeight());old.drawImage(before,0,0,getWidth(),getHeight(),null);old.dispose();
         if(t>0&&t<1){
             int curl=Math.max(1,(int)(Math.sin(Math.PI*t)*w*.28));int x=reverse?edge:edge-curl;
             g.setPaint(new GradientPaint(reverse?edge:edge,0,new Color(39,25,12,90),reverse?edge-curl*.65f:edge+curl*.65f,0,new Color(39,25,12,0)));
@@ -42,5 +54,6 @@ final class TurningNotebook extends NotebookStyle.Paper {
         }
         g.dispose();
     }
+    @Override public void setBounds(int x,int y,int w,int h){if(turnTimer!=null&&(w!=getWidth()||h!=getHeight()))finishTurn();super.setBounds(x,y,w,h);}
     @Override public void removeNotify(){finishTurn();super.removeNotify();}
 }

@@ -1,14 +1,39 @@
+# 변경 이력
+
+## v92 및 이후 개발 환경 정리 (2026-11-26)
+
+- 배경음악·환경음·효과음 슬라이더와 종료 후 음량 저장 추가.
+- 시작 화면과 인게임 설정을 공통 메뉴 디자인으로 통일, 일반 게임 화면에서 Esc 메뉴 연결.
+- build·outputs를 저장소 외부로 이동하고 성공한 최신 build만 자동 유지.
+- 테스트를 현재 검증·preview·archive로 분리하고 중복 검증 통합.
+- 음원 제작 도구를 authoring으로 분리하고 현재 음원 덮어쓰기 차단.
+- Effekseer 제작 원본을 design으로 이동.
+- 현재 가이드와 과거 기록을 docs에서 구분하고 루트 README를 간소화.
+
+문서·도구 정리는 v92 기반 작업이며 새 게임 기능 버전을 따로 올리지 않았습니다.
+
+## v83~v91 주요 흐름 (요약)
+
+- 첫 장치 사용 연출 도입 후 현재에서 실패·정전되는 흐름으로 수정. 과거 직행 시나리오 취소.
+- 외부 대사 파일, 타이핑 출력, 첫 도움말과 사고 안내 연결.
+- 현재 배전함에 배선 퍼즐 배치, 미래에는 임시 전력 합계 퍼즐 배치.
+- 배경 전환 좌표 통일, 대체 부품 장착 조건 수정, 연구 노트 DPI·크기·닫기 디자인 개선.
+- 버전별 세이브 폴더 분리.
+
+[현재 진행상황](docs/PROJECT_STATUS.md) / [상세 과거 기록](docs/archive/README.md).
+아래는 당시 버전의 기록이며 현재 사용 안내와 구분합니다.
+
 ## v82
 
 - Request audio lines using each original WAV format. Add bounded asynchronous recovery for startup clips and scene loops, without duplicate playback or delayed one-shot effects.
 - Preserve audio assets and UI timelines byte-for-byte. Improve device-error diagnostics.
-- Passed 15 actual EXE runs (10 normal, 3 injected recovery, 2 audio-synchronized intros) and regression checks. Historical hardware exception root cause remains unconfirmed; see docs/AUDIO_RECOVERY_V82.md.
+- Passed 15 actual EXE runs (10 normal, 3 injected recovery, 2 audio-synchronized intros) and regression checks. Historical hardware exception root cause remains unconfirmed; see docs/archive/history/AUDIO_RECOVERY_V82.md.
 
 ## v81
 
 - Precomputed clock fracture layers, deferred menu effects and overlays, bulk rain decoding, original external fonts.
 - Final paired EXE startup median: 1076 ms to 759 ms (29.5% reduction). 18 frames identical. Actual start/save/load/close verified with isolated saves.
-- Full results and transient audio limitation: docs/STARTUP_OPTIMIZATION_V81.md.
+- Full results and transient audio limitation: docs/archive/history/STARTUP_OPTIMIZATION_V81.md.
 
 ## v80
 
@@ -242,7 +267,7 @@ TimeEscape.exe 옆의 app 및 runtime 폴더를 함께 유지해야 합니다. �
 단독 제공 EXE는 같은 배포본 폴더 안에서 사용하는 실행 파일이며 단일 파일 설치 프로그램은 아닙니다.
 
 ## 개발
-Java 21 이상 JDK로 tools/build.ps1 -JavaHome <JDK경로>를 실행하면 build/uix_v29.jar가 생성됩니다.
+Java 21 이상 JDK로 tools/build.ps1 -JavaHome <JDK경로> -Version <버전>를 실행하면 ../26_uiux_artifacts/build/uix_v<버전>.jar가 생성됩니다.
 균열은 Java2D 코드로 그리며 GIF를 게임에서 재생하지 않습니다. 이전 균열 PNG는 더 이상 사용하지 않아 새 배포본에서 제외했습니다.
 게임 창과 EXE를 실행하지 않고 컴파일, headless 메뉴 검증 및 배포 파일 무결성 검사로 확인했습니다.
 

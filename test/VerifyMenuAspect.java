@@ -1,7 +1,7 @@
 import timeescape.ui.MainMenuPanel;import java.awt.*;import java.awt.image.BufferedImage;import javax.swing.*;import javax.imageio.ImageIO;import java.nio.file.*;
 public class VerifyMenuAspect {
  public static void main(String[] args)throws Exception{
-  Files.createDirectories(Path.of("outputs/v39-aspect"));
+  Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v39-aspect"));
   SwingUtilities.invokeAndWait(()->{try{
    var p=new MainMenuPanel(new MainMenuPanel.MenuActions(){public void startGame(){}public void continueGame(){}public void showSettings(){}public void exitGame(){}});
    p.setContinueAvailable(true);var hit=MainMenuPanel.class.getDeclaredMethod("buttonAt",Point.class);hit.setAccessible(true);
@@ -15,7 +15,7 @@ public class VerifyMenuAspect {
     }
     var im=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);var g=im.createGraphics();p.paint(g);g.dispose();
     for(int x:new int[]{0,w-1})if(im.getRGB(x,h/2)==new Color(35,27,21).getRGB())throw new AssertionError("letterbox");
-    ImageIO.write(im,"png",Path.of("outputs/v39-aspect/"+w+"x"+h+".png").toFile());
+    ImageIO.write(im,"png",timeescape.testutil.ArtifactPaths.output("v39-aspect/"+w+"x"+h+".png").toFile());
    }
    p.setVisible(false);System.out.println("PASS six aspect/size layouts, "+checks+" button hits, no blank side bars; headless.");
   }catch(Exception e){throw new RuntimeException(e);}});

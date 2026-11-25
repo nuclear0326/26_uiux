@@ -15,7 +15,7 @@ public final class VerifyLabWeather72 {
   p.setSize(w,h);BufferedImage im=new BufferedImage(w,h,2);Graphics2D g=im.createGraphics();p.printAll(g);g.dispose();return im;
  }
  public static void main(String[] args)throws Exception{
-  File out=new File(args[0]);out.mkdirs();
+  boolean preview=args.length>0; File out=preview?new File(args[0]):null; if(preview)out.mkdirs();
   LabWindowWeather weather=new LabWindowWeather();
   check(!weather.contains(980,300),"major frame excluded");
   check(!weather.contains(835,300),"thin frame excluded");
@@ -40,12 +40,13 @@ public final class VerifyLabWeather72 {
    var inventory=new InventoryPanel(id->{});var missions=new MissionPanel();
    var hud=new GameHud(p,missions,inventory,()->{},()->{},()->{});
    hud.setLocation("현재","연구실");hud.setSize(1280,786);layout(hud);
-   for(int i=0;i<96;i++){
+   if(preview)for(int i=0;i<96;i++){
     seconds.setDouble(p,10.5+i/24.);BufferedImage frame=new BufferedImage(1280,786,2);Graphics2D graphics=frame.createGraphics();hud.printAll(graphics);graphics.dispose();ImageIO.write(frame,"png",new File(out,String.format("frame_%03d.png",i)));
    }
-   seconds.setDouble(p,12.1);ImageIO.write(render(p,1440,900),"png",new File(out,"present_16x10.png"));
+   if(preview){seconds.setDouble(p,12.1);ImageIO.write(render(p,1440,900),"png",new File(out,"present_16x10.png"));
    ImageIO.write(render(p,1680,720),"png",new File(out,"present_ultrawide.png"));
    p.restorePowered(false);ImageIO.write(render(p,1280,720),"png",new File(out,"present_power_off.png"));
+   }
    for(Era era:new Era[]{Era.PAST,Era.FUTURE}){
     p.setEra(era);seconds.setDouble(p,1);BufferedImage a=render(p,640,360);seconds.setDouble(p,12.1);BufferedImage b=render(p,640,360);
     boolean equal=true;for(int y=0;y<360;y++)for(int x=0;x<640;x++)equal&=a.getRGB(x,y)==b.getRGB(x,y);

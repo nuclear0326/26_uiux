@@ -28,7 +28,7 @@ public class VerifyHotspots {
    panel.getActionMap().get("revealObjects").actionPerformed(new ActionEvent(panel,0,""));
    BufferedImage img=new BufferedImage(1920,1080,BufferedImage.TYPE_INT_RGB);
    var g=img.createGraphics(); panel.paint(g);g.dispose();
-   ImageIO.write(img,"png",new File("outputs/v7-"+eras[i]+"-hotspots.png"));
+   ImageIO.write(img,"png",timeescape.testutil.ArtifactPaths.file("v7-"+eras[i]+"-hotspots.png"));
    panel.getActionMap().get("hideObjects").actionPerformed(new ActionEvent(panel,0,""));
   }
   if(HotspotCatalog.of(Era.PRESENT).get(0).contains(850,450)) throw new AssertionError("Window included");
@@ -57,7 +57,7 @@ public class VerifyHotspots {
   panel.getActionMap().get("revealObjects").actionPerformed(new ActionEvent(panel,0,""));
   var preview=new BufferedImage(1410,790,BufferedImage.TYPE_INT_RGB);
   var pg=preview.createGraphics();layout.paint(pg);pg.dispose();
-  ImageIO.write(preview,"png",new File("outputs/v7-shift-preview.png"));
+  ImageIO.write(preview,"png",timeescape.testutil.ArtifactPaths.file("v7-shift-preview.png"));
   System.out.println("Shift press/repeat/release/focus-loss and F3 removal passed.");
   System.out.println("Hotspot checks passed: 3 eras x 3 sizes; background and ring gap excluded; Shift renders saved.");
  } catch(Exception e){throw new RuntimeException(e);} });

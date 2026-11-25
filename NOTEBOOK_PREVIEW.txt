@@ -1,3 +1,7 @@
+Historical notebook authoring record (v41). Old work/uix_v41 paths below describe the original workspace, not current dependencies.
+Current assets: src/assets/images/notebook/paper.png and items.png.
+Current previews: test/preview; outputs: ../26_uiux_artifacts/outputs.
+
 Generator: built-in image_gen (not CLI). Preview implementation: work/uix_v41.
 Existing v40 Windows release was not replaced. No game main, JFrame or EXE was launched.
 

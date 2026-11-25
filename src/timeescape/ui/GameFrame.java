@@ -72,7 +72,7 @@ public final class GameFrame extends JFrame {
         if(closing)return;
         closing=true;setEnabled(false);
         if(hud!=null)hud.cancelFirstTravel();
-        saveProgress().whenComplete((ignored,error)->{
+        saveProgress().thenCompose(v->timeescape.system.AudioSettings.get().save()).whenComplete((ignored,error)->{
             if(error!=null){closing=false;setEnabled(true);reportSaveFailure();return;}
             saveQueue.close();GameAudio.get().shutdown();super.dispose();
         });
@@ -201,9 +201,8 @@ public final class GameFrame extends JFrame {
                 showContinueSlots();
             }
             @Override public void showSettings() {
-                JCheckBox animation = new JCheckBox("게임 시작 시 소등·시계 파손 연출 사용", mainMenu.isTransitionAnimationEnabled());
-                int result = JOptionPane.showConfirmDialog(GameFrame.this, animation, "메뉴 설정", JOptionPane.OK_CANCEL_OPTION);
-                if (result == JOptionPane.OK_OPTION) mainMenu.setTransitionAnimation(animation.isSelected());
+                if(closing||starting)return;
+                setGameInputBlocked(true);ensureContinueSlots().open("settings");
             }
             @Override public void exitGame() {
                 int result = JOptionPane.showConfirmDialog(GameFrame.this, "종료하시겠습니까?", "게임 종료", JOptionPane.YES_NO_OPTION);
@@ -220,6 +219,7 @@ public final class GameFrame extends JFrame {
         continueSlots = new GameMenuOverlay(mainMenu, this::closeContinueSlots, ()->{}, ()->{});
         continueSlots.setAsyncSaveSlots(saveQueue::summaries, slot->java.util.concurrent.CompletableFuture.completedFuture(false), this::loadSlot);
         continueSlots.setNewGameAction(mainMenu::startConfirmedNewGame);
+        continueSlots.setTransitionSettings(()->mainMenu.isTransitionAnimationEnabled(),mainMenu::setTransitionAnimation);
         setGlassPane(continueSlots);
         return continueSlots;
     }

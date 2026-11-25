@@ -69,6 +69,7 @@ public final class DeviceDialog extends JDialog {
         JButton action = new JButton(actionName());
         action.setEnabled(isActionEnabled());
         action.addActionListener(e -> {
+            if (!isActionEnabled()) return;
             if (state.introPresent() && introTravel != null) { dispose(); introTravel.run(); return; }
             execute();
             dispose();
@@ -80,7 +81,9 @@ public final class DeviceDialog extends JDialog {
     }
 
     private String describe() {
-        if(state.prototypeFailed() && state.era()==Era.PAST) return "과거 좌표 이동 완료\n\n수리한 장치로 과거 연구실에 도착했습니다. 연구실을 조사해 다음 단서를 찾으세요.";
+        if(state.prototypeFailed() && state.era()==Era.PAST && !state.isWatchRepaired()) return state.hasSparePart()
+            ? "대체 부품: 확보됨\n\n보관함에서 대체 부품을 선택한 뒤 장착하세요. 장착하면 미래 좌표가 개방됩니다."
+            : "과거 좌표 이동 완료\n\n미래 좌표를 개방하려면 추가 부품이 필요합니다. 작업대의 황동 장치를 조사해 대체 부품을 확보하세요.";
         if (state.introPresent()) return "장치 상태: 시험 작동 대기\n\n상자에서 꺼낸 시간이동장치입니다. 사용 버튼을 눌러 시험 작동을 시작하세요.";
         if(state.prototypeFailed() && state.era()==Era.PRESENT) return state.canDepart()?"로그 분석 및 장치 수리 완료\n\n과거 좌표로 이동할 준비가 되었습니다.":"장치 상태: 시험 작동 실패\n현재 위치: 현재 연구실\n\n전원을 복구하고 컴퓨터의 사고 로그를 확보한 뒤 작업대에서 장치를 수리하세요.";
         if (state.firstTravelComplete()) return "장치 상태: 이동 중 고장\n도착 시점: 과거\n\n설정과 다른 시간에 도착했습니다. 이동 기능이 손상되어 장치 수리가 필요합니다.";
@@ -116,8 +119,8 @@ public final class DeviceDialog extends JDialog {
         if (state.introPresent()) return state.canDepart();
         if (state.firstTravelComplete()) return false;
         if (state.era() == Era.PRESENT) return state.canDepart();
-        if (state.era() == Era.PAST && !state.isWatchRepaired()) return state.hasSparePart() && spareSelected;
-        if (state.era() == Era.PAST) return true;
+        if (state.era() == Era.PAST && !state.isWatchRepaired()) return state.available("ACT_REPAIR") && spareSelected;
+        if (state.era() == Era.PAST) return state.canEnter("future_1");
         return state.hasCorePart() || state.isCoreInstalled();
     }
 

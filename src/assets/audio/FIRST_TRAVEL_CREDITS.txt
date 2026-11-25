@@ -13,4 +13,6 @@ https://pixabay.com/sound-effects/film-special-effects-whoosh-appearance-246467/
 License: Pixabay Content License. Sources acquired through official download UI.
 Validation: video fully decoded without errors; audio mix peak below clipping. Subjective listening review pending.
 
-Production v83 uses approved v6 soundtrack. Refer to docs/FIRST_TRAVEL_EFFECT.md for final timing and gains.
+Production v83 uses approved v6 soundtrack. Refer to docs/archive/cancelled/FIRST_TRAVEL_EFFECT.md for final timing and gains.
+
+Current opening flow: docs/OPENING_TIMELINE.md. The v83 timing above is historical; the current failed activation stays in the present and omits the warp sound. Source credits remain preserved.

@@ -1,0 +1,14 @@
+package timeescape.ui;
+import java.awt.*;import javax.swing.*;import timeescape.system.*;
+/** Three independent live volume controls within the shared menu shell. */
+final class AudioSettingsPanel extends JPanel {
+ final JSlider[] sliders=new JSlider[3];private final JLabel[] values=new JLabel[3];private boolean syncing;
+ final JLabel status=new JLabel(" ",SwingConstants.CENTER);
+ AudioSettingsPanel(){setOpaque(false);setLayout(new GridLayout(4,1,0,8));String[] names={"배경음악","환경음","효과음"};
+ for(int i=0;i<3;i++){final int index=i;var channel=AudioSettings.Channel.values()[i];JPanel row=new JPanel(new BorderLayout(10,2));row.setOpaque(false);JPanel labels=new JPanel(new BorderLayout());labels.setOpaque(false);JLabel label=new JLabel(names[i]);label.setFont(GameFonts.button(19));label.setForeground(LabTheme.TEXT);values[i]=new JLabel("100%",SwingConstants.RIGHT);values[i].setFont(GameFonts.body(16));values[i].setForeground(LabTheme.GOLD);labels.add(label);labels.add(values[i],BorderLayout.EAST);row.add(labels,BorderLayout.NORTH);
+ JSlider slider=new JSlider(0,100,100);sliders[i]=slider;slider.setName("volume-"+channel.name());slider.getAccessibleContext().setAccessibleName(names[i]+" 음량");slider.setOpaque(false);slider.setFocusable(true);slider.setUI(new javax.swing.plaf.basic.BasicSliderUI(slider){public void paintTrack(Graphics raw){Graphics2D g=(Graphics2D)raw.create();LabTheme.quality(g);int y=trackRect.y+trackRect.height/2;g.setColor(new Color(70,75,74));g.fillRoundRect(trackRect.x,y-2,trackRect.width,4,4,4);g.setColor(LabTheme.GOLD);g.fillRoundRect(trackRect.x,y-2,Math.max(0,xPositionForValue(slider.getValue())-trackRect.x),4,4,4);g.dispose();}public void paintThumb(Graphics raw){Graphics2D g=(Graphics2D)raw.create();LabTheme.quality(g);g.setColor(slider.hasFocus()?LabTheme.TEXT:LabTheme.GOLD);g.fillOval(thumbRect.x,thumbRect.y+2,thumbRect.width,thumbRect.height-4);g.dispose();}public void paintFocus(Graphics g){}});
+ slider.addChangeListener(e->{values[index].setText(slider.getValue()+"%");if(syncing)return;AudioSettings.get().set(channel,slider.getValue());GameAudio.get().refreshVolumes();if(!slider.getValueIsAdjusting())persist();});row.add(slider);add(row);}
+ status.setFont(GameFonts.body(13));status.setForeground(LabTheme.MUTED);add(status);}
+ void reload(){for(var s:sliders)s.setEnabled(false);AudioSettings.get().ready().whenComplete((v,e)->SwingUtilities.invokeLater(()->{syncing=true;for(int i=0;i<3;i++){sliders[i].setValue(AudioSettings.get().volume(AudioSettings.Channel.values()[i]));values[i].setText(sliders[i].getValue()+"%");sliders[i].setEnabled(true);}syncing=false;status.setText(AudioSettings.get().error().isEmpty()?"조절한 음량은 자동으로 저장됩니다.":AudioSettings.get().error());}));}
+ void persist(){AudioSettings.get().save().whenComplete((v,e)->SwingUtilities.invokeLater(()->status.setText(e==null?"음량 설정이 저장되었습니다.":"저장하지 못했습니다. 다시 조절해 주세요.")));}
+}

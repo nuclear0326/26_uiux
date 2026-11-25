@@ -1,8 +1,9 @@
-param([string]$JavaHome=$env:JAVA_HOME)
+﻿param([string]$JavaHome=$env:JAVA_HOME, [string]$ArtifactsRoot='')
 $ErrorActionPreference='Stop'
 if(!$JavaHome){throw 'Set JAVA_HOME to JDK 21.'}
 $root=Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
-$classes=Join-Path $root 'build/team-guide-example'
+if(!$ArtifactsRoot){$ArtifactsRoot=Join-Path (Split-Path $root -Parent) ((Split-Path $root -Leaf)+'_artifacts')}
+$classes=Join-Path $ArtifactsRoot 'build/team-guide-example'
 New-Item -ItemType Directory -Force $classes | Out-Null
 $sources=@(Get-ChildItem (Join-Path $root 'src') -Recurse -Filter *.java | ForEach-Object FullName)
 $examples=@(Get-ChildItem $PSScriptRoot -Filter *.java | ForEach-Object FullName)

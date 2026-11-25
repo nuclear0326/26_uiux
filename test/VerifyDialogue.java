@@ -28,7 +28,7 @@ public final class VerifyDialogue {
             try{DialogueCatalog.parse(new StringReader(invalid));throw new AssertionError("invalid accepted");}catch(IOException expected){checks++;}
         }
         List<String> opening=DialogueCatalog.standard().scene("intro.start");check(opening.size()==3,"three opening pages");
-        Path dir=Path.of("outputs/dialogue-preview");Files.createDirectories(dir);
+        Path dir=timeescape.testutil.ArtifactPaths.output("dialogue-preview");Files.createDirectories(dir);
         SwingUtilities.invokeAndWait(()->{try{
             GameState state=GameState.newGame();var before=state.snapshot();
             var scene=new GameScenePanel(id->{});scene.setEra(Era.PRESENT);scene.restorePowered(true);scene.setProgressHints(state);

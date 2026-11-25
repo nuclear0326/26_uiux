@@ -8,7 +8,7 @@ public class VerifyItemNotices66 {
  static JButton row(InventoryPanel p,String id){for(Component c:p.getComponents())if(c instanceof JButton b&&id.equals(b.getName()))return b;throw new AssertionError(id);}
  static void hover(JButton b){b.dispatchEvent(new MouseEvent(b,MouseEvent.MOUSE_ENTERED,0,0,20,20,0,false));}
  public static void main(String[] args)throws Exception{SwingUtilities.invokeAndWait(()->{try{
- UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());GameFonts.installDefaults();Path out=Path.of("outputs/v66-preview");Files.createDirectories(out.resolve("frames"));
+ UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());GameFonts.installDefaults();Path out=timeescape.testutil.ArtifactPaths.output("v66-preview");Files.createDirectories(out.resolve("frames"));
  GameState s=new GameState();GameScenePanel scene=new GameScenePanel(x->{});scene.setEra(Era.PRESENT);scene.restorePowered(true);InventoryPanel inv=new InventoryPanel(x->{});MissionPanel missions=new MissionPanel();GameHud hud=new GameHud(scene,missions,inv,()->{},()->{},()->{});
  inv.refresh(s,false);s.complete("PZ004");s.collect("USB");inv.refresh(s,false);stop(hud.itemNotice);check(inv.isUnread("USB"),"new pickup unread");check(hud.itemNotice.pendingCount()==1,"one notice");inv.refresh(s,false);check(hud.itemNotice.pendingCount()==1,"refresh no duplicate");
  hud.itemNotice.advance(.4);ImageIO.write(render(hud,1440,900),"png",out.resolve("item-acquired.png").toFile());

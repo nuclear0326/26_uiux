@@ -3,7 +3,7 @@ import java.awt.*;import java.awt.image.*;import java.nio.file.*;import javax.sw
 public class VerifyNewGamePrompt {
  static int checks;static void check(boolean ok,String message){if(!ok)throw new AssertionError(message);checks++;}
  static JButton button(GameMenuOverlay p,String name){for(Component c:p.getComponents())if(c instanceof JButton b&&name.equals(b.getName()))return b;throw new AssertionError(name);}
- public static void main(String[] args)throws Exception{Files.createDirectories(Path.of("outputs/v57-newgame"));SwingUtilities.invokeAndWait(()->{try{
+ public static void main(String[] args)throws Exception{Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v57-newgame"));SwingUtilities.invokeAndWait(()->{try{
   GameFonts.installDefaults();int[] starts={0},prompts={0};GameMenuOverlay[] holder={null};
   MainMenuPanel menu=new MainMenuPanel(new MainMenuPanel.MenuActions(){public boolean confirmNewGame(){prompts[0]++;holder[0].open("newgame");return false;}public void startGame(){starts[0]++;}public void continueGame(){}public void showSettings(){}public void exitGame(){}});
   menu.prepareEffects().join();
@@ -19,7 +19,7 @@ public class VerifyNewGamePrompt {
   var advance=MainMenuPanel.class.getDeclaredMethod("advance",double.class);advance.setAccessible(true);advance.invoke(menu,MenuStartTimeline.END_AT+1);check(starts[0]==2,"existing intro reaches game start");advance.invoke(menu,1.0);check(starts[0]==2,"intro completes once");
   for(int[] size:new int[][]{{1020,650},{1440,810},{1920,1080}}){menu.setSize(size[0],size[1]);popup.setSize(size[0],size[1]);popup.open("newgame");popup.doLayout();check(popup.panel.width<=520&&popup.panel.height<=290,"compact prompt");
    for(Component c:popup.getComponents())if(c instanceof JButton b&&b.getParent()==popup){check(popup.panel.contains(b.getBounds()),"button inside prompt");check(b.getFontMetrics(b.getFont()).stringWidth(b.getText())<=b.getWidth(),"button label fits");}
-   BufferedImage im=new BufferedImage(size[0],size[1],BufferedImage.TYPE_INT_RGB);Graphics2D g=im.createGraphics();popup.printAll(g);g.dispose();ImageIO.write(im,"png",Path.of("outputs/v57-newgame/prompt-"+size[0]+".png").toFile());popup.release();
+   BufferedImage im=new BufferedImage(size[0],size[1],BufferedImage.TYPE_INT_RGB);Graphics2D g=im.createGraphics();popup.printAll(g);g.dispose();ImageIO.write(im,"png",timeescape.testutil.ArtifactPaths.output("v57-newgame/prompt-"+size[0]+".png").toFile());popup.release();
   }
   System.out.println("PASS "+checks+" compact prompt/confirmation/intro checks; no game window launched.");
  }catch(Exception e){throw new RuntimeException(e);}});}

@@ -1,7 +1,7 @@
 import java.util.*;import java.util.concurrent.atomic.*;import java.nio.file.*;import timeescape.core.*;import timeescape.puzzle.*;import timeescape.system.*;
 public class VerifyPuzzleRunner {
  static int checks;static void check(boolean b,String s){if(!b)throw new AssertionError(s);checks++;}
- static Map<String,PuzzleRunner.Launcher> all(PuzzleRunner.Launcher f){Map<String,PuzzleRunner.Launcher> m=new HashMap<>();for(String k:List.of("present","rush_hour","gears","wires","confirm","action"))m.put(k,f);return m;}
+ static Map<String,PuzzleRunner.Launcher> all(PuzzleRunner.Launcher f){Map<String,PuzzleRunner.Launcher> m=new HashMap<>();for(String k:List.of("present","rush_hour","gears","wires","confirm","action","temporary_power"))m.put(k,f);return m;}
  static PuzzleRunner runner(GameState s){return new PuzzleRunner(all(step->PuzzleResult.SOLVED),()->s,()->true,step->{});}
  static void done(PuzzleRunner r,String id){check(r.run(id)==PuzzleRunner.Outcome.COMPLETED,id+" completed");}
  public static void main(String[] args)throws Exception{
@@ -21,7 +21,7 @@ public class VerifyPuzzleRunner {
     else{done(p,"PZ008");reference.complete("PZ008");for(String item:List.of("CASE","CELL","MODULE")){game.collect(item);reference.collect(item);}for(String id:List.of("PZ010","PZ011")){done(p,id);reference.complete(id);}}
     check(game.snapshot().equals(reference.snapshot()),"horizontal branch progression unchanged");
    }
-   check(game.canDepart()&&game.has("USB")&&!game.has("CELL"),"gate rewards/consumption unchanged");game.moveToPast();reference.moveToPast();done(p,"PZ002");reference.complete("PZ002");check(game.has("SPARE"),"gear reward");game.repairWatch();reference.repairWatch();game.moveToFuture();reference.moveToFuture();done(p,"PZ003");reference.complete("PZ003");check(game.has("CORE"),"wire reward");check(game.snapshot().equals(reference.snapshot())&&saves.get()==9,"all puzzle kinds match existing progress and one callback each");
+   check(game.canDepart()&&game.has("USB")&&!game.has("CELL"),"gate rewards/consumption unchanged");game.moveToPast();reference.moveToPast();done(p,"PZ002");reference.complete("PZ002");check(game.has("SPARE"),"gear reward");game.repairWatch();reference.repairWatch();game.moveToFuture();reference.moveToFuture();done(p,"PZ003");reference.complete("PZ003");check(game.has("CORE"),"temporary power reward");check(game.snapshot().equals(reference.snapshot())&&saves.get()==9,"all puzzle kinds match existing progress and one callback each");
    Path dir=Files.createTempDirectory("timeescape-runner-");SaveQueue queue=new SaveQueue(new SaveSlots(dir,ProgressCatalog.standard()));queue.saveAuto(game.snapshot(),true).get(5,java.util.concurrent.TimeUnit.SECONDS);check(queue.load(SaveSlots.Slot.AUTO).get(5,java.util.concurrent.TimeUnit.SECONDS).state().snapshot().equals(game.snapshot()),"new completion state persists in existing format");queue.close();
   }
   // Rush Hour uses the same 600ms cancellation gate, but reports a result instead of mutating progress.

@@ -33,7 +33,7 @@ public final class VerifyProgression {
             data=new String(in.readAllBytes(),StandardCharsets.UTF_8);
         }
         ProgressCatalog original=parse(data);
-        check(original.steps().size()==15,"all legacy puzzle/action/gate states defined");
+        check(original.steps().size()==19,"current tutorial and legacy states defined");
         for (boolean firstUsb : new boolean[]{true,false}) {
             GameState state=new GameState(original);
             check(state.roomId().equals("present_1"),"initial room");
@@ -67,7 +67,7 @@ public final class VerifyProgression {
         String extended=data.replace("rooms=present_1,past_1,future_1","rooms=present_1,past_1,future_1,present_2")
             .replace("room.present_1.exits=past_1","room.present_1.exits=past_1,present_2")
             .replace("items=USB,CASE,CELL,MODULE,DEVICE,SPARE,CORE","items=USB,CASE,CELL,MODULE,DEVICE,SPARE,CORE,KEY")
-            .replace("steps=PZ004,","steps=PZ_EXTRA,PZ_INSIDE,PZ004,") + """
+            .replace("steps=","steps=PZ_EXTRA,PZ_INSIDE,") + """
 
             room.present_2.era=PRESENT
             room.present_2.title=현재 · 숨겨진 방
@@ -101,7 +101,7 @@ public final class VerifyProgression {
 
         invalid(data.replace("step.PZ001.requires=PZ006","step.PZ001.requires=unknown"));
         invalid(data.replace("step.PZ006.requires=PZ004","step.PZ006.requires=PZ001"));
-        invalid(data.replace("steps=PZ004,","steps=PZ004,PZ004,"));
+        invalid(data.replace("steps=","steps=PZ004,"));
         invalid(data.replace("step.PZ001.room=present_1","step.PZ001.room=unknown"));
         invalid(data.replace("step.PZ010.items=CASE,CELL,MODULE","step.PZ010.items=CASE,CELL"));
         invalid(data.replace("schema.version=1","schema.version=999"));

@@ -16,7 +16,7 @@ public class VerifySlotMenus {
     static SaveSlots.Summary summary(Slot slot,boolean exists){return new SaveSlots.Summary(slot,exists,exists,false,exists?"현재 · 연구실 · 퍼즐 2개 완료":"비어 있음",exists?"2026.11.23 15:42:30":"");}
     static void render(GameMenuOverlay menu,int width,int height,String file)throws Exception{
         menu.setSize(width,height);menu.doLayout();BufferedImage image=new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
-        Graphics2D g=image.createGraphics();menu.printAll(g);g.dispose();ImageIO.write(image,"png",Path.of("outputs/v54-slots",file+".png").toFile());
+        Graphics2D g=image.createGraphics();menu.printAll(g);g.dispose();ImageIO.write(image,"png",timeescape.testutil.ArtifactPaths.output("v54-slots",file+".png").toFile());
         for(Component c:menu.getComponents())if(c instanceof JButton b){
             check(menu.panel.contains(b.getBounds()),"button stays inside panel");
             check(b.getFontMetrics(b.getFont()).stringWidth(b.getText())<b.getWidth(),"button title fits");
@@ -26,7 +26,7 @@ public class VerifySlotMenus {
         }
     }
     public static void main(String[] args)throws Exception{
-        Files.createDirectories(Path.of("outputs/v54-slots"));
+        Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v54-slots"));
         SwingUtilities.invokeAndWait(()->{try{
             GameFonts.installDefaults();GameScenePanel scene=new GameScenePanel(id->{});scene.setEra(timeescape.model.Era.PRESENT);scene.restorePowered(true);scene.setSize(1440,810);
             int[] saves={0},loads={0},closes={0};Slot[] selected={null};boolean[] fail={false};

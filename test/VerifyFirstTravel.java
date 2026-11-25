@@ -15,7 +15,7 @@ public final class VerifyFirstTravel {
  static void field(Object target,String name,Object value)throws Exception{var f=target.getClass().getDeclaredField(name);f.setAccessible(true);f.set(target,value);}
  static void layout(Container c){c.doLayout();for(Component x:c.getComponents())if(x instanceof Container n)layout(n);}
  public static void main(String[] args)throws Exception{
-  Path out=Path.of("outputs/v83-travel");Files.createDirectories(out);
+  Path out=timeescape.testutil.ArtifactPaths.output("v83-travel");Files.createDirectories(out);
   var state=GameState.newGame();state.takePrototype();
   var saves=new SaveStore(Files.createTempDirectory("travel-verification-"),ProgressCatalog.standard());
   SwingUtilities.invokeAndWait(()->{try{

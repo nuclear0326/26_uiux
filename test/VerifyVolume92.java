@@ -1,0 +1,17 @@
+package timeescape.system;
+import java.nio.file.*;import java.lang.reflect.*;import javax.sound.sampled.*;import java.util.*;import java.util.concurrent.*;
+public class VerifyVolume92 {
+ static int n;static void ok(boolean b,String s){if(!b)throw new AssertionError(s);n++;}
+ static class Gain extends FloatControl{Gain(){super(FloatControl.Type.MASTER_GAIN,-80,6,.1f,1,0,"dB");}}
+ static class Mute extends BooleanControl{Mute(){super(BooleanControl.Type.MUTE,false);}}
+ static class Fake implements InvocationHandler{Gain gain=new Gain();Mute mute=new Mute();boolean open=true;int starts;Clip clip=(Clip)Proxy.newProxyInstance(Clip.class.getClassLoader(),new Class[]{Clip.class},this);public Object invoke(Object p,Method m,Object[] a){switch(m.getName()){case "isOpen":return open;case "isControlSupported":return true;case "getControl":return a[0]==BooleanControl.Type.MUTE?mute:gain;case "start":starts++;break;case "close":open=false;break;}if(m.getReturnType()==boolean.class)return false;if(m.getReturnType()==int.class)return 0;if(m.getReturnType()==long.class)return 0L;return null;}}
+ public static void main(String[] args)throws Exception{
+  Path file=Files.createTempDirectory("volume92-").resolve("audio.properties");var first=new AudioSettings(file);first.ready().get();ok(first.volume(AudioSettings.Channel.BGM)==100,"default preserves mix");first.set(AudioSettings.Channel.BGM,25);first.set(AudioSettings.Channel.AMBIENCE,50);first.set(AudioSettings.Channel.SFX,0);first.save().get();var loaded=new AudioSettings(file);loaded.ready().get();ok(loaded.volume(AudioSettings.Channel.BGM)==25&&loaded.volume(AudioSettings.Channel.AMBIENCE)==50&&loaded.volume(AudioSettings.Channel.SFX)==0,"all channels restored from disk");loaded.set(AudioSettings.Channel.SFX,999);ok(loaded.volume(AudioSettings.Channel.SFX)==100,"clamped");
+  var settings=AudioSettings.get();settings.ready().get();settings.set(AudioSettings.Channel.BGM,25);settings.set(AudioSettings.Channel.AMBIENCE,50);settings.set(AudioSettings.Channel.SFX,0);
+  Map<String,Fake> clips=new ConcurrentHashMap<>();var audio=new GameAudio(path->{var f=new Fake();clips.put(path,f);return f.clip;},false);
+  var wf=GameAudio.class.getDeclaredField("audio");wf.setAccessible(true);var worker=(ScheduledThreadPoolExecutor)wf.get(audio);var open=GameAudio.class.getDeclaredMethod("openClip",String.class);open.setAccessible(true);var set=GameAudio.class.getDeclaredMethod("setGain",Clip.class,float.class);set.setAccessible(true);
+  worker.submit(()->{try{for(String p:new String[]{"bgm/test.wav","ambience/test.wav","sfx/test.wav"})set.invoke(audio,open.invoke(audio,p),.5f);}catch(Exception e){throw new RuntimeException(e);}}).get();
+  ok(Math.abs(clips.get("bgm/test.wav").gain.getValue()-20*Math.log10(.125))<.02,"bgm gain");ok(Math.abs(clips.get("ambience/test.wav").gain.getValue()-20*Math.log10(.25))<.02,"ambience gain");ok(clips.get("sfx/test.wav").mute.getValue(),"zero mutes without stopping clock");
+  settings.set(AudioSettings.Channel.SFX,75);audio.refreshVolumes();worker.submit(()->{}).get();ok(!clips.get("sfx/test.wav").mute.getValue()&&Math.abs(clips.get("sfx/test.wav").gain.getValue()-20*Math.log10(.375))<.02,"live unmute");ok(clips.values().stream().allMatch(f->f.starts==0),"volume does not restart clips");audio.shutdown();worker.awaitTermination(3,TimeUnit.SECONDS);System.out.println("PASS "+n+" persistence/category gain/live mute checks; fake audio only");
+ }
+}

@@ -19,6 +19,7 @@ final class GameMenuOverlay extends JPanel {
     private Runnable newGame=()->{};
     private final JLabel newGameMessage=new JLabel("<html><div style='text-align:center'>새 게임을 시작하면 자동저장이 초기화됩니다.<br>저장소 1~4는 그대로 유지됩니다.</div></html>",SwingConstants.CENTER);
     final HelpContent helpContent=new HelpContent();
+    final AudioSettingsPanel audioSettings=new AudioSettingsPanel();
     private Supplier<java.util.List<timeescape.system.SaveSlots.Summary>> slots=java.util.List::of;
     private Predicate<timeescape.system.SaveSlots.Slot> saveSlot=slot->false,loadSlot=slot->false;
     private java.util.function.Supplier<java.util.concurrent.CompletableFuture<java.util.List<timeescape.system.SaveSlots.Summary>>> asyncSlots;
@@ -46,7 +47,7 @@ final class GameMenuOverlay extends JPanel {
         getActionMap().put("back",new AbstractAction(){public void actionPerformed(ActionEvent e){back();}});
         information.setForeground(new Color(185,177,161));information.setFont(GameFonts.body(14));add(information);
         newGameMessage.setFont(GameFonts.body(16));newGameMessage.setForeground(new Color(188,184,173));newGameMessage.setVisible(false);add(newGameMessage);
-        helpContent.setVisible(false);add(helpContent);
+        helpContent.setVisible(false);add(helpContent);audioSettings.setVisible(false);add(audioSettings);
         showPage("menu");
     }
     void setNewGameAction(Runnable action){newGame=action;}
@@ -84,7 +85,7 @@ final class GameMenuOverlay extends JPanel {
     };b.setName(name);b.setOpaque(false);b.setBorderPainted(false);b.setContentAreaFilled(false);b.setFocusPainted(false);b.setCursor(GameCursors.interact());b.setFont(GameFonts.button(30));return b;}
     private void option(String label,String name,Runnable action){JButton b=link(label,name);
         if(label.equals("돌아가기")){b.setText("");b.putClientProperty("backArrow",true);b.setToolTipText("돌아가기 (Esc)");b.getAccessibleContext().setAccessibleName("돌아가기");}b.addActionListener(e->{if(!busy)action.run();});options.add(b);add(b);}
-    void showPage(String next){if(busy)return;long revision=++pageRevision;page=next;newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();
+    void showPage(String next){if(busy)return;long revision=++pageRevision;if(page.equals("settings")&&!next.equals("settings"))audioSettings.persist();page=next;audioSettings.setVisible(next.equals("settings"));newGameMessage.setVisible(next.equals("newgame"));helpContent.setVisible(next.equals("help"));information.setText("");for(JButton b:options)remove(b);options.clear();
         switch(next){
             case "newgame"->{title.setText("새 게임을 시작할까요?");option("취소","cancel-newgame",close);option("시작","confirm-newgame",()->{if(!isVisible())return;close.run();newGame.run();});}
             case "help"->{title.setText("조작 도움말");information.setText("<html><div style='text-align:center'>?버튼을 클릭시 조작 도움말을<br>다시 볼 수 있습니다.</div></html>");option("닫기","help-close",close);}
@@ -113,7 +114,7 @@ final class GameMenuOverlay extends JPanel {
                 option("돌아가기","back",()->{if(saving||next.equals("ingameload"))showPage("menu");else close.run();});
             }
             case "overwrite"->{title.setText(overwrite.title()+"에 덮어쓸까요?");option("저장","confirm-save",()->saveSelected(overwrite));option("취소","cancel",()->showPage("save"));}
-            case "settings"->{title.setText("설정");option("시작 연출  "+(intro.getAsBoolean()?"켜짐":"꺼짐"),"intro",()->{setIntro.accept(!intro.getAsBoolean());showPage("settings");});option("돌아가기","back",()->showPage("menu"));}
+            case "settings"->{title.setText("설정");audioSettings.reload();option("시작 연출  "+(intro.getAsBoolean()?"켜짐":"꺼짐"),"intro",()->{setIntro.accept(!intro.getAsBoolean());showPage("settings");});option("돌아가기","back",()->{if(scene instanceof MainMenuPanel)close.run();else showPage("menu");});}
             default->{title.setText("게임 메뉴");option("저장","save",()->showPage("save"));option("불러오기","load",()->showPage("ingameload"));option("설정","settings",()->showPage("settings"));option("메인 메뉴","main",()->{close.run();main.run();});}
         }
         revalidate();doLayout();repaint();if(isShowing())focusFirst();
@@ -150,8 +151,8 @@ final class GameMenuOverlay extends JPanel {
     }
     void open(){open("menu");}
     void open(String page){showPage(page);backdrop=null;setVisible(true);repaint();focusFirst();}
-    void release(){pageRevision++;setVisible(false);backdrop=null;}
-    void back(){if(busy)return;if(page.equals("menu")||page.equals("load")||page.equals("help")||page.equals("newgame"))close.run();else showPage(page.equals("overwrite")?"save":"menu");}
+    void release(){if(page.equals("settings"))audioSettings.persist();pageRevision++;setVisible(false);backdrop=null;}
+    void back(){if(busy)return;if((page.equals("settings")&&scene instanceof MainMenuPanel)||page.equals("menu")||page.equals("load")||page.equals("help")||page.equals("newgame"))close.run();else showPage(page.equals("overwrite")?"save":"menu");}
     private void prepareBackdrop(){
         if(backdrop!=null&&cachedWidth==getWidth()&&cachedHeight==getHeight())return;
         cachedWidth=getWidth();cachedHeight=getHeight();int w=Math.max(1,getWidth()/3),h=Math.max(1,getHeight()/3);
@@ -164,7 +165,7 @@ final class GameMenuOverlay extends JPanel {
     }
     @Override public void doLayout(){int w=Math.min(620,Math.max(420,(int)(getWidth()*.39))),h=Math.min(680,(int)(getHeight()*.82));boolean slotPage=page.equals("save")||page.equals("load")||page.equals("ingameload");
         if(slotPage)h=Math.min(760,Math.max(0,getHeight()-24));
-        if(page.equals("help"))h=Math.min(680,Math.max(h,Math.min(getHeight()-24,590)));
+        if(page.equals("help")||page.equals("settings"))h=Math.min(680,Math.max(h,Math.min(getHeight()-24,590)));
         if(page.equals("newgame")){w=Math.min(520,Math.max(1,getWidth()-40));h=Math.min(290,Math.max(1,getHeight()-40));}
         panel.setBounds((getWidth()-w)/2,(getHeight()-h)/2,w,h);
         if(page.equals("newgame")){
@@ -177,6 +178,11 @@ final class GameMenuOverlay extends JPanel {
         }
         int titleSize=(page.equals("reset")||page.equals("overwrite"))?26:Math.min(48,w/11);title.setFont(GameFonts.title(titleSize));title.setBounds(panel.x+24,panel.y+42,w-48,66);dismiss.setFont(GameFonts.button(30));dismiss.setBounds(panel.x+w-57,panel.y+15,40,40);
         information.setBounds(panel.x+20,panel.y+108,w-40,24);
+        if(page.equals("settings")){
+            audioSettings.setBounds(panel.x+40,panel.y+155,w-80,Math.max(140,h-285));
+            for(int i=0;i<options.size();i++){var b=options.get(i);b.setFont(GameFonts.button(20));b.setBounds(panel.x+24,panel.y+h-112+i*48,w-48,44);}
+            return;
+        }
         if(page.equals("help")){
             information.setBounds(panel.x+20,panel.y+108,w-40,42);
             helpContent.setBounds(panel.x+40,panel.y+158,w-80,h-238);
