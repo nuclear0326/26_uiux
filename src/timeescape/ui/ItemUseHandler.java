@@ -57,7 +57,7 @@ final class ItemUseHandler {
                 boolean installedBefore = state.isCoreInstalled();
                 boolean escapedBefore = state.isEscaped();
                 host.openDevice(state, host.spareSelected(), () -> {
-                        if(!host.isCurrent(state))return;
+                    if(!host.isCurrent(state))return;
                     host.save();
                     host.selectSpare(false);
                     if (!escapedBefore && state.isEscaped()) {
@@ -88,5 +88,5 @@ final class ItemUseHandler {
             }
             default -> { }
         }
-    }}
+    }
 }
