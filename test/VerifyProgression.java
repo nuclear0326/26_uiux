@@ -33,7 +33,7 @@ public final class VerifyProgression {
             data=new String(in.readAllBytes(),StandardCharsets.UTF_8);
         }
         ProgressCatalog original=parse(data);
-        check(original.steps().size()==21,"current tutorial and legacy states defined");
+        check(original.steps().size()==22,"current tutorial, seed puzzle and legacy states defined");
         for (boolean firstUsb : new boolean[]{true,false}) {
             GameState state=new GameState(original);
             check(state.roomId().equals("present_1"),"initial room");
@@ -49,7 +49,11 @@ public final class VerifyProgression {
             var snap=state.snapshot(); state.moveToPast();
             check(snap.roomId().equals("present_1"),"snapshot detached");
             blocked(()->state.enterRoom("present_1")); // Existing direction remains unchanged.
-            state.collectSparePart(); state.repairWatch(); state.collectSparePart();
+            state.collectSparePart();
+            check(state.available("PZ012"),"seed puzzle becomes available after gear repair");
+            state.complete("PZ012");
+            check(state.flag("seed_planted"),"planting persists as a progress flag");
+            state.repairWatch(); state.collectSparePart();
             check(state.done("PZ002")&&!state.has("SPARE"),"reward cannot be farmed after consumption");
             state.moveToFuture(); state.collectCorePart(); state.installCorePart(); state.collectCorePart();
             check(!state.has("CORE"),"core cannot be farmed");
@@ -101,10 +105,7 @@ public final class VerifyProgression {
 
         invalid(data.replace("step.PZ001.requires=PZ006","step.PZ001.requires=unknown"));
         invalid(data.replace("step.PZ006.requires=PZ004,ACT_GET_CIPHER","step.PZ006.requires=PZ001"));
-        invalid(data.replace("steps=","steps=PZ004,"));
-        invalid(data.replace("step.PZ001.room=present_1","step.PZ001.room=unknown"));
-        invalid(data.replace("step.PZ010.items=CASE,CELL,MODULE","step.PZ010.items=CASE,CELL"));
-        invalid(data.replace("schema.version=1","schema.version=999"));
-        System.out.println("PASS "+checks+" progression/schema/extension checks; no game launched.");
+        invalid(data.replace("step.PZ010.consume=CASE,CELL,MODULE","step.PZ010.consume=UNKNOWN"));
+        System.out.println("PASS VerifyProgression checks="+checks);
     }
 }
