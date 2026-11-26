@@ -48,11 +48,13 @@ public final class VerifyProgression {
             check(state.missionCompletedCount("M_USB")==4&&state.missionCompletedCount("M_DEVICE")==4,"UI counts");
             var snap=state.snapshot(); state.moveToPast();
             check(snap.roomId().equals("present_1"),"snapshot detached");
-            blocked(()->state.enterRoom("present_1")); // Existing direction remains unchanged.
             state.collectSparePart();
             check(state.available("PZ012"),"seed puzzle becomes available after gear repair");
             state.complete("PZ012");
             check(state.flag("seed_planted"),"planting persists as a progress flag");
+            state.enterRoom("present_1");
+            check(state.roomId().equals("present_1"),"past can return to present to inspect growth");
+            state.enterRoom("past_1");
             state.repairWatch(); state.collectSparePart();
             check(state.done("PZ002")&&!state.has("SPARE"),"reward cannot be farmed after consumption");
             state.moveToFuture(); state.collectCorePart(); state.installCorePart(); state.collectCorePart();
@@ -105,7 +107,10 @@ public final class VerifyProgression {
 
         invalid(data.replace("step.PZ001.requires=PZ006","step.PZ001.requires=unknown"));
         invalid(data.replace("step.PZ006.requires=PZ004,ACT_GET_CIPHER","step.PZ006.requires=PZ001"));
-        invalid(data.replace("step.PZ010.consume=CASE,CELL,MODULE","step.PZ010.consume=UNKNOWN"));
-        System.out.println("PASS VerifyProgression checks="+checks);
+        invalid(data.replace("steps=","steps=PZ004,"));
+        invalid(data.replace("step.PZ001.room=present_1","step.PZ001.room=unknown"));
+        invalid(data.replace("step.PZ010.items=CASE,CELL,MODULE","step.PZ010.items=CASE,CELL"));
+        invalid(data.replace("schema.version=1","schema.version=999"));
+        System.out.println("PASS "+checks+" progression/schema/extension checks; no game launched.");
     }
 }
