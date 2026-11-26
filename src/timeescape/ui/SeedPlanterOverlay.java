@@ -2,16 +2,18 @@ package timeescape.ui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
 import javax.swing.JComponent;
 import timeescape.model.Era;
 
-/** Java2D scene illustration for the floor planter, note and loose seeds. */
+/** Restrained, aged scene illustration for the floor planter and its field note. */
 final class SeedPlanterOverlay extends JComponent {
     private static final int IMAGE_W=1920, IMAGE_H=1080;
     private Era era=Era.PAST;
@@ -40,7 +42,8 @@ final class SeedPlanterOverlay extends JComponent {
         g.scale(viewport.width/(double)IMAGE_W,viewport.height/(double)IMAGE_H);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        paintFloorDirt(g);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
+        paintSoil(g);
         paintPot(g);
         paintNote(g);
         paintSeeds(g);
@@ -48,94 +51,127 @@ final class SeedPlanterOverlay extends JComponent {
         g.dispose();
     }
 
-    private void paintFloorDirt(Graphics2D g) {
-        g.setColor(new Color(15,11,8,105));
-        g.fillOval(245,930,455,62);
-        g.setColor(new Color(75,48,29,205));
-        g.fillOval(260,910,410,65);
-        g.setColor(new Color(112,76,47,210));
-        g.fillOval(280,919,370,44);
-        g.setColor(new Color(45,31,22,220));
-        for(int i=0;i<18;i++) {
-            int x=282+(i*47%354), y=925+(i*29%30);
-            g.fillOval(x,y,5+(i%3),3+(i%2));
+    private void paintSoil(Graphics2D g) {
+        // Uneven spill of dark potting earth, softened into the photographed floor.
+        g.setColor(new Color(9,7,5,118));
+        g.fillOval(270,930,390,44);
+        Path2D earth=new Path2D.Double();
+        earth.moveTo(293,927); earth.curveTo(305,906,343,916,359,911);
+        earth.curveTo(382,899,409,915,428,908); earth.curveTo(451,900,480,914,501,906);
+        earth.curveTo(529,897,554,916,579,909); earth.curveTo(608,903,630,920,647,930);
+        earth.curveTo(620,950,598,960,562,958); earth.curveTo(532,972,497,955,468,963);
+        earth.curveTo(438,970,410,956,378,963); earth.curveTo(346,970,315,954,293,947); earth.closePath();
+        g.setPaint(new GradientPaint(0,904,new Color(77,51,33,232),0,962,new Color(35,25,19,238)));
+        g.fill(earth);
+        g.setColor(new Color(139,99,60,115));
+        g.setStroke(new BasicStroke(2));
+        g.drawArc(312,911,305,43,8,158);
+        g.setColor(new Color(25,18,13,210));
+        for(int i=0;i<27;i++) {
+            int x=307+(i*43%321), y=920+(i*31%32), r=2+i%3;
+            g.fillOval(x,y,r*2,r);
+        }
+        g.setColor(new Color(172,133,84,155));
+        for(int i=0;i<8;i++) {
+            int x=322+(i*71%286), y=916+(i*19%28);
+            g.fillOval(x,y,3,2);
         }
     }
 
     private void paintPot(Graphics2D g) {
-        // Soft cast shadow and a medium-sized aged terracotta planter.
-        g.setColor(new Color(10,8,6,100));
-        g.fillOval(396,914,194,35);
+        // Medium hand-thrown terracotta pot, deliberately muted to match the room.
+        g.setColor(new Color(7,5,4,140));
+        g.fillOval(414,919,172,28);
         Polygon body=new Polygon(
-                new int[]{414,566,548,435},
-                new int[]{803,803,925,925},4);
-        g.setPaint(new java.awt.GradientPaint(410,0,new Color(159,91,55),570,0,new Color(89,48,34)));
+                new int[]{425,567,550,443},
+                new int[]{806,806,922,922},4);
+        g.setPaint(new GradientPaint(421,0,new Color(119,68,45),568,0,new Color(64,39,30)));
         g.fillPolygon(body);
-        g.setColor(new Color(205,132,83,210));
-        g.setStroke(new BasicStroke(3));
-        g.drawLine(421,823,559,823);
-        g.drawLine(432,884,551,884);
-        g.setColor(new Color(64,39,29,190));
-        g.fillOval(413,785,155,42);
-        g.setPaint(new java.awt.GradientPaint(0,786,new Color(113,73,45),0,819,new Color(45,34,26)));
-        g.fillOval(422,791,137,30);
-        g.setColor(new Color(198,127,79));
-        g.fillRoundRect(405,778,171,25,9,9);
-        g.setColor(new Color(229,160,105,210));
+        g.setColor(new Color(185,119,76,130));
         g.setStroke(new BasicStroke(2));
-        g.drawRoundRect(405,778,171,25,9,9);
-        g.setColor(new Color(72,47,33,220));
-        g.fillOval(418,783,145,22);
-        g.setColor(new Color(120,82,50,220));
-        for(int i=0;i<13;i++) {
-            int x=429+(i*31%112), y=787+(i*11%13);
-            g.fillOval(x,y,5,3);
-        }
+        g.drawLine(430,826,560,826);
+        g.drawLine(439,884,552,884);
+        g.setColor(new Color(43,29,23,230));
+        g.fillOval(415,788,158,40);
+        g.setPaint(new GradientPaint(0,790,new Color(79,54,38),0,824,new Color(33,26,22)));
+        g.fillOval(426,793,136,29);
+        g.setColor(new Color(139,84,54));
+        g.fillRoundRect(411,781,166,23,7,7);
+        g.setColor(new Color(194,133,88,180));
+        g.setStroke(new BasicStroke(1.6f));
+        g.drawRoundRect(411,781,166,23,7,7);
+        g.setColor(new Color(49,35,27,240));
+        g.fillOval(423,785,142,20);
+        // Small scuffs and kiln marks keep the silhouette from reading as a flat icon.
+        g.setColor(new Color(219,161,109,90));
+        g.drawArc(431,835,34,27,195,118);
+        g.drawArc(516,857,22,33,35,112);
+        g.setColor(new Color(36,25,20,155));
+        g.drawLine(450,872,455,878);
+        g.drawLine(530,839,534,844);
     }
 
     private void paintNote(Graphics2D g) {
         AffineTransform old=g.getTransform();
-        g.rotate(-0.12,330,862);
-        g.setColor(new Color(8,7,6,100));
-        g.fillRoundRect(252,814,150,103,5,5);
-        g.setColor(new Color(202,184,139));
-        g.fillRoundRect(244,804,150,103,5,5);
-        g.setColor(new Color(104,83,55));
-        g.setStroke(new BasicStroke(1.5f));
-        g.drawRoundRect(244,804,150,103,5,5);
-        g.setFont(GameFonts.button(13));
-        g.drawString("재배 기록",260,829);
-        g.setFont(GameFonts.body(12));
-        g.drawString("푸른 빛 아래",260,851);
-        g.drawString("물은 한 번만",260,869);
-        g.setColor(new Color(133,74,48,170));
-        g.drawLine(260,878,374,878);
+        g.rotate(-0.10,328,862);
+        // Shadow, torn lower edge, yellowed paper and faint ruled writing.
+        g.setColor(new Color(5,4,3,145));
+        g.fillRoundRect(250,815,145,99,3,3);
+        Path2D paper=new Path2D.Double();
+        paper.moveTo(244,805); paper.lineTo(387,805); paper.lineTo(390,894);
+        paper.lineTo(376,891); paper.lineTo(361,896); paper.lineTo(344,891);
+        paper.lineTo(327,896); paper.lineTo(310,891); paper.lineTo(293,896);
+        paper.lineTo(277,891); paper.lineTo(258,895); paper.lineTo(246,889); paper.closePath();
+        g.setPaint(new GradientPaint(244,805,new Color(195,174,126),390,895,new Color(143,119,80)));
+        g.fill(paper);
+        g.setColor(new Color(76,59,39,190));
+        g.setStroke(new BasicStroke(1.2f));
+        g.draw(paper);
+        g.setColor(new Color(91,74,49,135));
+        g.drawLine(258,842,375,842);
+        g.drawLine(258,860,370,860);
+        g.drawLine(258,878,370,878);
+        g.setColor(new Color(70,54,37,225));
+        g.setFont(GameFonts.button(11));
+        g.drawString("실험 기록  17",258,827);
+        g.setFont(GameFonts.body(10));
+        g.drawString("청색광에서 발아가 빠름",258,839);
+        g.drawString("물은 한 차례만 공급할 것",258,857);
+        g.drawString("잎의 순서를 기록할 것",258,875);
+        // Tarnished brass clip, visually fastening the note to the floor.
+        g.setColor(new Color(122,91,49,220));
+        g.fillRoundRect(374,809,10,15,2,2);
+        g.setColor(new Color(194,155,91,175));
+        g.drawRoundRect(374,809,10,15,2,2);
         g.setTransform(old);
     }
 
     private void paintSeeds(Graphics2D g) {
-        int[][] seeds={{353,932},{371,944},{386,930},{400,948}};
+        int[][] seeds={{358,938},{377,946},{395,934},{414,947}};
         for(int i=0;i<seeds.length;i++) {
-            int x=seeds[i][0],y=seeds[i][1];
-            g.setColor(new Color(30,21,15,190));
-            g.fillOval(x+1,y+2,13,8);
-            g.setPaint(new java.awt.GradientPaint(x,y,new Color(212,174,105),x+12,y+8,new Color(105,69,39)));
-            g.fillOval(x,y,13,8);
-            g.setColor(new Color(235,207,143,190));
-            g.drawArc(x+2,y+1,8,5,15,120);
+            int x=seeds[i][0], y=seeds[i][1];
+            g.setColor(new Color(8,6,4,160)); g.fillOval(x+1,y+2,10,6);
+            g.setPaint(new GradientPaint(x,y,new Color(175,139,82),x+10,y+6,new Color(69,49,31)));
+            g.fillOval(x,y,10,6);
+            g.setColor(new Color(221,190,126,145));
+            g.drawArc(x+2,y+1,6,3,10,125);
         }
     }
 
     private void paintSprout(Graphics2D g) {
-        g.setStroke(new BasicStroke(5,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
-        g.setColor(new Color(94,139,81));
-        g.drawLine(490,794,490,724);
-        g.setColor(new Color(132,183,103));
-        g.fillOval(458,728,39,19);
-        g.fillOval(488,744,39,19);
-        g.setColor(new Color(202,183,91));
-        g.fillOval(481,714,18,18);
-        g.setColor(new Color(237,220,149,210));
-        g.drawArc(484,716,10,10,35,110);
+        // Restrained, delicate shoot: muted greens and a tiny pale flower bud.
+        g.setStroke(new BasicStroke(3.2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
+        g.setColor(new Color(54,87,47,235));
+        g.drawLine(493,796,493,737);
+        g.setStroke(new BasicStroke(2.2f,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND));
+        g.drawLine(493,765,477,752);
+        g.drawLine(493,755,509,744);
+        g.setColor(new Color(103,133,71,225));
+        g.fillOval(464,744,23,10);
+        g.fillOval(503,736,22,10);
+        g.setColor(new Color(173,150,91,235));
+        g.fillOval(489,728,8,8);
+        g.setColor(new Color(210,190,137,160));
+        g.drawArc(490,729,5,5,30,100);
     }
 }
