@@ -24,7 +24,7 @@ public class VerifySaveSlots {
         new SaveStore(dir,ProgressCatalog.standard()).save(state.snapshot());
         check(slots.load(Slot.AUTO).state().powered(),"v45 progress.save loads as auto without migration");
         slots.saveManual(Slot.ONE,state.snapshot());var first=state.snapshot();
-        state.complete("PZ006");slots.saveManual(Slot.TWO,state.snapshot());var second=state.snapshot();
+        state.complete("ACT_GET_CIPHER");state.complete("PZ006");slots.saveManual(Slot.TWO,state.snapshot());var second=state.snapshot();
         slots.saveManual(Slot.THREE,first);slots.saveManual(Slot.FOUR,second);
         check(slots.load(Slot.THREE).state().snapshot().equals(first),"manual 3 roundtrip");
         check(slots.load(Slot.FOUR).state().snapshot().equals(second),"manual 4 roundtrip");

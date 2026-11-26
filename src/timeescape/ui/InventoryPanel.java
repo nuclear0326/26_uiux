@@ -19,7 +19,7 @@ public final class InventoryPanel extends JPanel implements Scrollable {
   for(String id:current)if(!observed.contains(id)){acquired.accept(id,itemName(s,id));}
   observed=current;
  }
- static String itemName(GameState s,String id){return switch(id){case "USB"->s.usbComplete()?"연구 데이터 USB":"빈 USB";case "CASE"->"장치 케이스";case "CELL"->"전원 셀";case "MODULE"->"제어 모듈";case "DEVICE"->"손목 시간여행 장치";case "SPARE"->"대체 부품";case "CORE"->"미래 핵심 부품";default->id;};}
+ static String itemName(GameState s,String id){return switch(id){case "FAULT_REPORT"->"사고 분석 보고서";case "CIPHER_TABLE"->"메모 해독표";case "USB"->s.usbComplete()?"연구 데이터 USB":"빈 USB";case "CASE"->"장치 케이스";case "CELL"->"전원 셀";case "MODULE"->"제어 모듈";case "DEVICE"->"손목 시간여행 장치";case "SPARE"->"대체 부품";case "CORE"->"미래 핵심 부품";default->id;};}
 
  private java.util.function.BooleanSupplier interactionAllowed=()->true;
  void setInteractionAllowed(java.util.function.BooleanSupplier allowed){interactionAllowed=allowed;}
@@ -34,6 +34,7 @@ public final class InventoryPanel extends JPanel implements Scrollable {
  private static final java.awt.image.BufferedImage ATLAS=NotebookStyle.load("items.png");
  private static final java.util.Map<String,java.awt.image.BufferedImage> ICONS=new java.util.HashMap<>();
  static void paintItem(Graphics2D g,String id,int x,int y){
+  if(id.equals("CIPHER_TABLE")){g.drawImage(CipherMemoOverlay.image(),x-8,y-16,80,74,null);return;}
   java.awt.image.BufferedImage icon=ICONS.computeIfAbsent(id,key->{int cell=switch(key){case "USB"->0;case "CASE"->1;case "CELL"->2;case "MODULE"->3;case "DEVICE"->4;case "SPARE"->5;case "CORE"->6;default->7;};int cw=ATLAS.getWidth()/4,ch=ATLAS.getHeight()/2;return ATLAS.getSubimage(cell%4*cw,cell/4*ch,cw,ch);});
   g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
   g.drawImage(icon,x-12,y-22,90,90,null);
@@ -41,7 +42,9 @@ public final class InventoryPanel extends JPanel implements Scrollable {
  public void refresh(GameState s,boolean selected){syncItems(s);removeAll();if(s.has("DEVICE"))item("손목 시간여행 장치",s.introPresent()?"상자에서 꺼낸 시제품. 클릭해 사용 화면을 엽니다.":s.flag("device_broken")&&!s.deviceComplete()&&!s.isWatchRepaired()?"고장난 장치. 클릭해서 수리 상태를 확인합니다.":"시간 이동 및 장치 수리. 클릭해서 엽니다.","DEVICE",false);
   if(s.hasSparePart())item("대체 부품",selected?"선택됨. 손목 장치를 열어 수리하세요.":"과거에서 얻은 부품. 클릭해 수리에 사용할 부품을 선택합니다.","SPARE",selected);
   if(s.hasCorePart())item("미래 핵심 부품","손목 장치의 최종 수리에 사용하는 핵심 부품입니다.","CORE",false);
-  if(s.has("USB"))item(s.usbComplete()?"연구 데이터 USB":"빈 USB",s.usbComplete()?"연구 기록이 저장된 장치. 미래에서 사용할 수 있습니다.":"컴퓨터에서 복구한 연구 데이터를 복사할 저장 매체입니다.","USB",false);
+  if(s.has("USB"))item(s.usbComplete()?"연구 데이터 USB":"빈 USB",s.done("PZ021")?"사고 로그 분석 완료. 이후 사용할 수 있도록 USB를 보관합니다.":s.usbComplete()?"사고 기록이 저장된 장치. 클릭하여 로그를 분석합니다.":"컴퓨터에서 복구한 연구 데이터를 복사할 저장 매체입니다.","USB",false);
+  if(s.has("FAULT_REPORT"))item("사고 분석 보고서","최초 원인은 좌표 보정 불일치. 클릭해 수리 방향을 확인하세요.","FAULT_REPORT",false);
+  if(s.has("CIPHER_TABLE"))item("메모 해독표","문양과 숫자의 대응표. 클릭하면 크게 다시 볼 수 있습니다.","CIPHER_TABLE",false);
   for(String id:new String[]{"CASE","CELL","MODULE"})if(s.has(id))item(switch(id){case "CASE"->"장치 케이스";case "CELL"->"전원 셀";default->"제어 모듈";},switch(id){case "CASE"->"장치의 내부 부품을 보호하는 외장입니다.";case "CELL"->"시간여행 장치에 전력을 공급하는 제작 부품입니다.";default->"시간 좌표를 제어하는 제작 부품입니다.";},id,false);
   if(getComponentCount()==0){JTextArea empty=NotebookStyle.text("아직 보관 중인 아이템이 없습니다.\n\n연구실의 오브젝트를 조사해 아이템을 찾아보세요.",16);empty.setAlignmentX(LEFT_ALIGNMENT);add(empty);}NotebookScale.apply(this,NotebookScale.of(this));revalidate();repaint();
  }

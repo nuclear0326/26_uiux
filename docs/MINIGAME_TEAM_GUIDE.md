@@ -8,14 +8,14 @@
 
 ```text
 배경 오브젝트 클릭
-  → GameFrame이 진행 설정에서 실행할 단계를 찾음
+  → SceneInteractionHandler가 진행 설정에서 실행할 단계를 찾음
   → PuzzleRunner가 선행 조건과 중복 실행을 확인
   → PuzzleDialogs가 kind에 맞는 창을 실행
   → 퍼즐 패널이 모델을 조작하고 정답을 확인
   → 창이 SOLVED 또는 CANCELLED 반환
   → PuzzleRunner가 완료 처리
   → GameState가 설정된 보상, 아이템 소비, 환경 상태, 방 개방 반영
-  → GameFrame이 화면 갱신과 저장 처리
+  → GameController가 GameView로 화면 갱신을 요청하고 GameSession에 저장 요청
 ```
 
 퍼즐은 자기 규칙만 처리합니다. 퍼즐 코드에서 GameState.complete(), 아이템 지급, 파일 저장을 직접 호출하지 마세요. 공통 완료 처리와 중복되면 보상이나 저장 문제가 생깁니다.
@@ -269,3 +269,11 @@ JDK 21과 JAVA_HOME 설정이 필요합니다. 저장소 루트 PowerShell에서
 - [빌드·배포 안내](../tools/ARTIFACTS.md), [현재 진행](OPENING_TIMELINE.md), [조작키](TEMPORARY_CHEAT.md), [디자인 규칙](ui-design-guidelines.md)를 함께 참고하세요.
 
 테스트 실행과 정리된 폴더 구조: [테스트 안내](../test/README.md)를 참고하세요.
+
+### 상호작용 코드 위치 (v97)
+
+- 배경 오브젝트 조사와 수집: `src/timeescape/ui/SceneInteractionHandler.java`
+- 보관함 아이템 사용과 장치 후속 처리: `src/timeescape/ui/ItemUseHandler.java`
+- 실제 창/연출/오디오 연결: `InteractionHost`를 구현한 GameController와 화면 요청을 표시하는 GameFrame
+- 일반 퍼즐 추가는 기존처럼 game.properties와 PuzzleDialogs 등록을 우선 사용합니다. 별도 아이템 사용이 필요할 때만 ItemUseHandler에 추가합니다.
+- 지연 콜백은 `host.isCurrent(시작상태)`를 확인하고, 핸들러에 GameState를 장기 보관하지 않습니다.

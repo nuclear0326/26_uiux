@@ -19,8 +19,8 @@ public final class VerifyFailedPrototype {
   check(InteractionHint.of(s,"POWER")==InteractionHint.READY,"power is current objective");
   var store=new SaveStore(Files.createTempDirectory("failed-prototype-"),ProgressCatalog.standard());store.save(s.snapshot());
   s=store.load().orElseThrow().state();check(s.era()==Era.PRESENT&&!s.powered()&&s.has("DEVICE"),"restore accident");
-  s.complete("PZ004");check(s.powered()&&s.available("PZ006")&&s.available("PZ008"),"existing parallel missions restored");
-  s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");check(!s.canDepart(),"logs alone insufficient");
+  s.complete("PZ004");check(s.powered()&&s.available("ACT_GET_CIPHER")&&!s.available("PZ006")&&!s.available("PZ008"),"repair blocked until USB analysis");
+  s.complete("ACT_GET_CIPHER");s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");s.complete("PZ021");check(!s.canDepart(),"logs alone insufficient");
   s.complete("PZ008");for(String id:new String[]{"CASE","CELL","MODULE"})s.collect(id);s.complete("PZ010");s.complete("PZ011");
   check(s.canDepart()&&s.roomUnlocked("past_1"),"repair and logs unlock past");new TimeTravelController(s).travel();
   check(s.era()==Era.PAST,"successful travel only after repair");store.save(s.snapshot());check(store.load().orElseThrow().state().snapshot().equals(s.snapshot()),"repaired destination saved");

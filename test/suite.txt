@@ -31,3 +31,9 @@ VerifyAudioRecovery82
 VerifyRainCoverage74
 VerifyLabWeather72
 VerifySceneStability
+VerifyCipher93
+VerifyAccident94
+VerifyViewUpdater96
+VerifyInteractions97
+VerifySession98
+VerifyController99

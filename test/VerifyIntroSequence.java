@@ -54,7 +54,7 @@ public final class VerifyIntroSequence {
         q.saveAuto(resumed.snapshot(),true).get(5,TimeUnit.SECONDS);
         check(q.load(SaveSlots.Slot.AUTO).get(5,TimeUnit.SECONDS).state().snapshot().equals(resumed.snapshot()),"autosave includes destination and damage");q.close();
         // Old saves carry no INTRO_START marker and retain their existing progression.
-        GameState old=new GameState();old.complete("PZ004");old.complete("PZ006");old.completeDiagnosis();old.collect("USB");old.complete("PZ007");
+        GameState old=new GameState();old.complete("PZ004");old.complete("ACT_GET_CIPHER");old.complete("PZ006");old.completeDiagnosis();old.collect("USB");old.complete("PZ007");old.complete("PZ021");
         old.complete("PZ008");old.collect("CASE");old.collect("CELL");old.collect("MODULE");old.complete("PZ010");old.complete("PZ011");
         old=roundTrip(old,temp.resolve("legacy"));check(!old.introScenario()&&old.canDepart(),"legacy route preserved");
         old.moveToPast();old.collectSparePart();old.repairWatch();old.moveToFuture();check(old.era()==Era.FUTURE,"legacy repair and travel preserved");

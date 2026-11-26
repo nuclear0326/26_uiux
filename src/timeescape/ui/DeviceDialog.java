@@ -90,7 +90,7 @@ public final class DeviceDialog extends JDialog {
         if (state.era() == Era.PRESENT) {
             return "USB 확보: " + (state.usbComplete() ? "완료" : "미완료")
                 + "\n장치 제작: " + (state.deviceComplete() ? "완료" : "미완료")
-                + "\n\n" + (state.canDepart() ? "두 미션 완료. 과거로 이동할 수 있습니다." : "두 미션을 모두 완료해야 과거로 이동할 수 있습니다.");
+                + "\n\n" + (state.canDepart() ? "사고 분석과 장치 수리 완료. 과거로 이동할 수 있습니다." : "사고 로그 분석 후 장치 수리를 마쳐야 과거로 이동할 수 있습니다.");
         }
         if (state.era() == Era.PAST && !state.isWatchRepaired()) {
             return "장치 상태: 심각하게 파손됨\n과거 좌표 이동: 완료\n\n과거 작업대의 황동 장치에서 대체 부품을 찾고, 인벤토리에서 부품을 선택한 뒤 이 장치를 다시 클릭하세요.";

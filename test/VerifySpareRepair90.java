@@ -3,7 +3,7 @@ import timeescape.core.*;import timeescape.system.*;import timeescape.model.Era;
 public final class VerifySpareRepair90 {
  static int n;static void ok(boolean b,String s){if(!b)throw new AssertionError(s);n++;}
  public static void main(String[] args)throws Exception{
-  var s=GameState.newGame();s.takePrototype();s.usePrototype();s.complete("PZ004");s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");s.complete("PZ008");for(String id:new String[]{"CASE","CELL","MODULE"})s.collect(id);s.complete("PZ010");s.complete("PZ011");s.moveToPast();
+  var s=GameState.newGame();s.takePrototype();s.usePrototype();s.complete("PZ004");s.complete("ACT_GET_CIPHER");s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");s.complete("PZ021");s.complete("PZ008");for(String id:new String[]{"CASE","CELL","MODULE"})s.collect(id);s.complete("PZ010");s.complete("PZ011");s.moveToPast();
   ok(!s.available("ACT_REPAIR")&&!s.canEnter("future_1"),"no part no repair or future");
   try{s.repairWatch();throw new AssertionError("repair should require part");}catch(IllegalStateException expected){n++;}
   s.collectSparePart();ok(s.hasSparePart()&&s.available("ACT_REPAIR"),"v89 reported state now allows repair");

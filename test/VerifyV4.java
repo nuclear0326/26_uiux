@@ -14,7 +14,7 @@ public final class VerifyV4 {
    if(s.era()!=Era.PRESENT) throw new AssertionError("Should start in present");
    boolean blocked=false;try{s.moveToPast();}catch(IllegalStateException e){blocked=true;}
    if(!blocked)throw new AssertionError("Past should be gated");
-   s.complete("PZ004");s.complete("PZ006");s.completeDiagnosis();
+   s.complete("PZ004");s.complete("ACT_GET_CIPHER");s.complete("PZ006");s.completeDiagnosis();
    s.collect("USB");s.complete("PZ007");s.complete("PZ008");
    s.collect("CASE");s.collect("CELL");s.collect("MODULE");s.complete("PZ010");s.complete("PZ011");s.moveToPast();
    blocked=false;try{s.moveToFuture();}catch(IllegalStateException e){blocked=true;}

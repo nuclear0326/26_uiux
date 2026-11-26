@@ -16,7 +16,10 @@ public abstract class RepairPuzzlePanel extends JPanel {
         PuzzleChrome.decorate(this);
     }
     protected final void build(String heading, String instructions, JComponent board, JButton... controls) {
-        add(PuzzleChrome.header(heading,heading.contains("시계")?"과거 / 4 × 4 기어 복원":"현재 / 배전함 배선 복구",instructions,this::closePuzzle),BorderLayout.NORTH);
+        build(heading,heading.contains("시계")?"과거 / 4 × 4 기어 복원":"현재 / 배전함 배선 복구",instructions,board,controls);
+    }
+    protected final void build(String heading,String context,String instructions,JComponent board,JButton... controls){
+        add(PuzzleChrome.header(heading,context,instructions,this::closePuzzle),BorderLayout.NORTH);
         add(board,BorderLayout.CENTER);
         JPanel footer=new JPanel(new BorderLayout(0,10));footer.setOpaque(false);status.setForeground(LabTheme.TEXT);status.setFont(GameFonts.body(14));footer.add(status,BorderLayout.NORTH);
         JPanel buttons=new JPanel(new FlowLayout(FlowLayout.CENTER,9,0));buttons.setOpaque(false);

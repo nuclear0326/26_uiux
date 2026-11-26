@@ -21,7 +21,7 @@ public final class VerifyProgression {
         throw new AssertionError("Invalid catalog accepted");
     }
     static void usb(GameState state) {
-        state.complete("PZ006"); state.completeDiagnosis(); state.collect("USB"); state.complete("PZ007");
+        state.complete("ACT_GET_CIPHER");state.complete("PZ006"); state.completeDiagnosis(); state.collect("USB"); state.complete("PZ007");state.complete("PZ021");
     }
     static void device(GameState state) {
         state.complete("PZ008"); state.collect("CASE"); state.collect("CELL"); state.collect("MODULE");
@@ -33,19 +33,19 @@ public final class VerifyProgression {
             data=new String(in.readAllBytes(),StandardCharsets.UTF_8);
         }
         ProgressCatalog original=parse(data);
-        check(original.steps().size()==19,"current tutorial and legacy states defined");
+        check(original.steps().size()==21,"current tutorial and legacy states defined");
         for (boolean firstUsb : new boolean[]{true,false}) {
             GameState state=new GameState(original);
             check(state.roomId().equals("present_1"),"initial room");
             blocked(()->state.enterRoom("past_1")); blocked(()->state.complete("PZ002"));
             blocked(()->state.collect("SPARE")); blocked(()->state.enterRoom("unknown"));
             state.complete("PZ004"); check(state.flag("power_restored"),"environment reward");
-            if(firstUsb) usb(state); else device(state);
+            if(!firstUsb) blocked(()->state.complete("PZ008")); usb(state);
             check(!state.roomUnlocked("past_1"),"AND gate stays locked after one branch");
-            if(firstUsb) device(state); else usb(state);
+            device(state);
             check(state.done("GATE001")&&state.roomUnlocked("past_1"),"automatic room unlock");
             check(state.has("DEVICE")&&!state.has("CASE"),"assembly reward and cost");
-            check(state.missionCompletedCount("M_USB")==3&&state.missionCompletedCount("M_DEVICE")==4,"UI counts");
+            check(state.missionCompletedCount("M_USB")==4&&state.missionCompletedCount("M_DEVICE")==4,"UI counts");
             var snap=state.snapshot(); state.moveToPast();
             check(snap.roomId().equals("present_1"),"snapshot detached");
             blocked(()->state.enterRoom("present_1")); // Existing direction remains unchanged.
@@ -59,10 +59,10 @@ public final class VerifyProgression {
         }
         String reordered=data.replace("step.PZ001.order=20","step.PZ001.order=1")
             .replace("step.PZ011.order=40","step.PZ011.order=1");
-        GameState state=new GameState(parse(reordered));state.complete("PZ004");
+        GameState state=new GameState(parse(reordered));state.complete("PZ004");state.complete("ACT_GET_CIPHER");
         check(state.nextStep("M_USB").orElseThrow().id().equals("PZ006"),"display order does not bypass dependencies");
-        check(state.nextObjectStep("WORKBENCH").orElseThrow().id().equals("PZ008"),"workbench follows prerequisites");
-        usb(state);device(state);check(state.canDepart(),"reordered data preserves gameplay");
+        check(!state.available("PZ008"),"reordered repair still blocked before analysis");
+        usb(state);check(state.nextObjectStep("WORKBENCH").orElseThrow().id().equals("PZ008"),"workbench follows prerequisites");device(state);check(state.canDepart(),"reordered data preserves gameplay");
 
         String extended=data.replace("rooms=present_1,past_1,future_1","rooms=present_1,past_1,future_1,present_2")
             .replace("room.present_1.exits=past_1","room.present_1.exits=past_1,present_2")
@@ -100,7 +100,7 @@ public final class VerifyProgression {
         catch(UnsupportedOperationException expected){checks++;}
 
         invalid(data.replace("step.PZ001.requires=PZ006","step.PZ001.requires=unknown"));
-        invalid(data.replace("step.PZ006.requires=PZ004","step.PZ006.requires=PZ001"));
+        invalid(data.replace("step.PZ006.requires=PZ004,ACT_GET_CIPHER","step.PZ006.requires=PZ001"));
         invalid(data.replace("steps=","steps=PZ004,"));
         invalid(data.replace("step.PZ001.room=present_1","step.PZ001.room=unknown"));
         invalid(data.replace("step.PZ010.items=CASE,CELL,MODULE","step.PZ010.items=CASE,CELL"));

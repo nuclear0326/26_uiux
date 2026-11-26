@@ -52,4 +52,8 @@ SHA-256은 손상 확인용이며 암호화나 치트 방지 기능이 아닙니
 슬라이더는 0~100이며 100은 현재 승인된 원래 믹스 크기를 의미합니다.
 이 파일은 세이브 슬롯과 독립적이며 게임 패키지에 사용자 설정을 넣지 않습니다.
 
-관련 코드: `SaveStore`, `SaveSlots`, `SaveQueue`, `GameState.restore`, `AudioSettings`, `GameMenuOverlay`, `GameFrame`.
+관련 코드: `GameSession`, `SaveStore`, `SaveSlots`, `SaveQueue`, `GameState.restore`, `AudioSettings`, `GameMenuOverlay`, `GameFrame`.
+
+## v98 세션 수명 관리
+
+GameSession이 현재 GameState와 SaveQueue를 소유합니다. saveAuto는 불변 스냅샷을 전달하고 새 게임 첫 저장만 기존 startNew 정책으로 처리합니다. 수동 슬롯은 유지합니다. prepareLoad는 현재 진행 저장 후 파일을 읽고, GameFrame이 UI 준비를 마치면 applyLoaded로 상태를 교체합니다. 읽기/준비 실패는 현재 상태를 그대로 둡니다. 다른 불러오기나 새 게임 뒤의 지연된 결과와 이미 적용한 결과는 다시 적용하지 않습니다. 종료 시 진행과 음량 저장이 성공한 뒤 세션 대기열을 닫습니다. 파일 형식, 기본 저장 경로, 체크섬과 백업 로직은 변경하지 않았습니다.

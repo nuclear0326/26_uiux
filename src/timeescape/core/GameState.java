@@ -26,7 +26,7 @@ public final class GameState {
     public boolean prototypeFailed() { return done("ACT_START_FAILURE"); }
     public String introGoal() {
         if(prototypeFailed() && era()==Era.PAST) return "장치 수리 후 과거에 도착했습니다. 과거 연구실을 조사하세요.";
-        if(prototypeFailed() && era()==Era.PRESENT) return !powered()?"시간이동에 실패했습니다. 배전함에서 연구실 전력을 복구하세요.":canDepart()?"로그 분석과 장치 수리가 끝났습니다. 보관함의 장치로 과거로 이동하세요.":"컴퓨터의 사고 로그를 확보하고 작업대에서 장치를 수리하세요.";
+        if(prototypeFailed() && era()==Era.PRESENT) return !powered()?"시간이동에 실패했습니다. 배전함에서 연구실 전력을 복구하세요.":canDepart()?"로그 분석과 장치 수리가 끝났습니다. 보관함의 장치로 과거로 이동하세요.":"사고 로그를 확보하고 USB로 분석한 뒤 작업대에서 장치를 수리하세요.";
         return introPresent() ? (has("DEVICE")
             ? "연구 노트의 보관함에서 시간이동장치를 사용하세요."
             : "왼쪽 보관 상자에서 시간이동장치를 꺼내세요.")
@@ -117,6 +117,8 @@ public final class GameState {
         settleAutomaticSteps();
     }
     public boolean missionLocked(String id) {
+        // Saves already inside the repair branch keep their earned progress.
+        if(id.equals("M_DEVICE") && done("PZ008"))return false;
         return !completed.containsAll(catalog.mission(id).requires());
     }
     public int missionCompletedCount(String id) {
@@ -129,7 +131,8 @@ public final class GameState {
             .or(() -> pending.stream().findFirst());
     }
     public String missionNext(String id) {
-        if(prototypeFailed() && powered() && id.equals("M_USB") && done("PZ006") && !done("PZ001")) return "컴퓨터 접근 퍼즐을 해결해 사고 로그를 분석하세요.";
+        if(prototypeFailed() && powered() && id.equals("M_USB") && done("PZ006") && !done("PZ001")) return "컴퓨터 접근 퍼즐을 해결해 사고 로그를 복구하세요.";
+        if(id.equals("M_USB") && powered() && !has("CIPHER_TABLE") && !done("PZ006"))return "연구 메모를 조사해 해독표를 획득하세요.";
         if (missionLocked(id)) return catalog.mission(id).requires().stream().filter(key -> !done(key))
             .sorted().map(key -> catalog.steps().get(key).prompt()).findFirst().orElse("");
         if (done(id)) return catalog.mission(id).finishedText();
@@ -184,7 +187,7 @@ public final class GameState {
 
     // Compatibility facade: existing UI and its design remain unchanged.
     public boolean powered() { return (flag("intro_power_on") && !prototypeFailed()) || flag("power_restored"); }
-    public boolean usbComplete() { return done("M_USB"); }
+    public boolean usbComplete() { return done("PZ007"); }
     public boolean deviceComplete() { return done("M_DEVICE"); }
     public boolean canDepart() { return introPresent() ? available("ACT_START_FAILURE") : usbComplete() && deviceComplete(); }
     public String usbNext() { return missionNext("M_USB"); }

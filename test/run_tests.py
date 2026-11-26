@@ -1,6 +1,7 @@
 """Compile every test (including archive); run only the safe regression manifest."""
 from pathlib import Path
-import argparse, os, re, subprocess, tempfile, json
+import argparse, os, re, subprocess, tempfile, json, sys
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 p=argparse.ArgumentParser();p.add_argument('--java-home',required=True);p.add_argument('--artifacts-root',type=Path);p.add_argument('--only',nargs='+');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1]
 artifacts=(a.artifacts_root or repo.with_name(repo.name+'_artifacts')).resolve()

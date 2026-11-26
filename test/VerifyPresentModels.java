@@ -6,7 +6,7 @@ public class VerifyPresentModels {
   for(int i=0;i<old.size();i++)check(old.value(i)==model.value(i)&&old.label(i).equals(model.label(i)),"control "+old.id+":"+i);
   if(model instanceof PowerDistributionPuzzle p)check(old.power()==p.power()&&model.status().equals("출력 "+old.power()+" / 16  ·  필요한 회로만 연결하세요."),"power/status");
  }
- public static void main(String[] args){String[] ids={"PZ004","PZ006","PZ008","PZ010","PZ011"};int states=0;
+ public static void main(String[] args){String[] ids={"PZ004","PZ008","PZ010","PZ011"};int states=0;
  for(String id:ids){int mod=id.equals("PZ004")?2:id.equals("PZ006")?10:4;PresentPuzzle fresh=PresentPuzzles.create(id);int combinations=(int)Math.pow(mod,fresh.size());
   for(int code=0;code<combinations;code++){
    for(int next=-1;next<fresh.size();next++){var old=new LegacyPresentPuzzleModel(id);var model=PresentPuzzles.create(id);int digits=code;for(int i=0;i<model.size();i++){int clicks=digits%mod;digits/=mod;for(int j=0;j<clicks;j++){old.turn(i);model.turn(i);}}if(next>=0){old.turn(next);model.turn(next);}compare(old,model);}

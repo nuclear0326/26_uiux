@@ -1,13 +1,13 @@
 # TIME ESCAPE
 
 Java 21, Swing, Java2D로 제작 중인 시간 테마 방탈출 게임입니다.
-현재 배포 기준은 v92이며, 자세한 구현 현황은 [현재 진행상황](docs/PROJECT_STATUS.md)을 참고하세요.
+현재 배포 기준은 v99이며, 자세한 구현 현황은 [현재 진행상황](docs/PROJECT_STATUS.md)을 참고하세요.
 
 ## 실행
 
 Windows 배포 ZIP 전체를 압축 해제한 뒤 `TimeEscape/TimeEscape.exe`를 실행합니다.
 EXE 옆 `app`과 `runtime` 폴더가 필요합니다. 배포본은 Java 실행 환경을 포함합니다.
-현재 배포 위치는 저장소 옆 `../26_uiux_artifacts/outputs/uix_v92_windows/TimeEscape`입니다.
+현재 배포 위치는 저장소 옆 `../26_uiux_artifacts/outputs/uix_v99_windows/TimeEscape`입니다.
 
 ## 개발과 빌드
 
@@ -15,8 +15,8 @@ Eclipse에서 Java 프로젝트로 열고 JDK 21 이상을 사용합니다. 원�
 저장소 루트 PowerShell에서 다음 명령으로 빌드·패키징합니다. 게임은 자동 실행하지 않습니다.
 
 ```powershell
-& ./tools/build.ps1 -JavaHome "JDK21경로" -Version 92
-python tools/package_windows.py --version 92 --base 91 --zip
+& ./tools/build.ps1 -JavaHome "JDK21경로" -Version 99
+python tools/package_windows.py --version 99 --base 98 --zip
 ```
 
 패키징에는 `--base`에 해당하는 기존 배포본의 EXE와 runtime이 필요합니다.

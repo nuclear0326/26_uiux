@@ -28,7 +28,7 @@ public final class VerifyCompletionReservation {
         check(calls[0]==1,"closing before timeout gives no reward");
         reservation.schedule(600,()->true,()->calls[0]++);check(scheduler.queued.size()==4,"disposed session cannot schedule");
 
-        GameState state=new GameState();state.complete("PZ004");state.complete("PZ006");
+        GameState state=new GameState();state.complete("PZ004");state.complete("ACT_GET_CIPHER");state.complete("PZ006");
         Scheduler realStateQueue=new Scheduler();CompletionReservation session=new CompletionReservation(realStateQueue);
         session.schedule(600,()->true,state::completeDiagnosis);session.cancel();realStateQueue.fire(0);
         check(!state.done("PZ001"),"cancel does not mutate real game progress");

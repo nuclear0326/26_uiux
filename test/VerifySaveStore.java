@@ -16,7 +16,7 @@ public class VerifySaveStore {
         return reloaded;
     }
     static void prepare(GameState s) {
-        s.complete("PZ004");s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");
+        s.complete("PZ004");s.complete("ACT_GET_CIPHER");s.complete("PZ006");s.completeDiagnosis();s.collect("USB");s.complete("PZ007");s.complete("PZ021");
         s.complete("PZ008");s.collect("CASE");s.collect("CELL");s.collect("MODULE");s.complete("PZ010");s.complete("PZ011");
     }
     static void ioFailure(IORunnable action) throws Exception {
@@ -48,9 +48,9 @@ public class VerifySaveStore {
         check(disk.load().isEmpty()&&!Files.exists(path),"missing save does not create an empty run");
         GameState s=checkpoint(new GameState(),path);
         s.complete("PZ004");s=checkpoint(s,path);check(s.powered(),"power restoration persists");
-        s.complete("PZ006");s=checkpoint(s,path);s.completeDiagnosis();s=checkpoint(s,path);
+        s.complete("ACT_GET_CIPHER");s.complete("PZ006");s=checkpoint(s,path);s.completeDiagnosis();s=checkpoint(s,path);
         check(!s.usbComplete(),"unfinished USB mission stays unfinished");
-        s.collect("USB");s=checkpoint(s,path);s.complete("PZ007");s=checkpoint(s,path);
+        s.collect("USB");s=checkpoint(s,path);s.complete("PZ007");s.complete("PZ021");s=checkpoint(s,path);
         s.complete("PZ008");s.collect("CASE");s.collect("CELL");s=checkpoint(s,path);
         check(!s.done("PZ009"),"partial item collection retained without premature completion");
         s.collect("MODULE");s=checkpoint(s,path);s.complete("PZ010");s=checkpoint(s,path);
