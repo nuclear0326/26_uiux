@@ -8,8 +8,10 @@ import timeescape.model.Era;
 /** Background silhouettes in original image coordinates. */
 public final class HotspotCatalog {
     private HotspotCatalog() { }
-    private static final List<Hotspot> PAST = List.of(new Hotspot("PAST_SPARE", "황동 부품 장치",
-        polygon(1088,714, 1127,696, 1238,713, 1236,844, 1211,871, 1086,849)));
+    private static final List<Hotspot> PAST = List.of(
+        new Hotspot("PAST_PLANTER", "연구 화분 · 씨앗 메모", new java.awt.Rectangle(210,700,560,340)),
+        new Hotspot("PAST_SPARE", "황동 부품 장치",
+            polygon(1088,714, 1127,696, 1238,713, 1236,844, 1211,871, 1086,849)));
     private static final List<Hotspot> PRESENT = List.of(new Hotspot("PRESENT_PC", "진단 컴퓨터",
         polygon(873,489, 999,487, 1007,500, 1006,581, 995,591, 878,589, 872,580)),
         new Hotspot("POWER", "벽면 철제 배전함", polygon(773,325, 830,320, 844,326, 844,410, 773,413)),
