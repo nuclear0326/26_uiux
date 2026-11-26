@@ -1,5 +1,7 @@
 package timeescape.ui;
 
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.Objects;
 import javax.swing.JLabel;
 import timeescape.core.GameState;
@@ -10,6 +12,7 @@ import timeescape.model.Era;
  */
 final class GameViewUpdater {
     private final GameScenePanel scene;
+    private final SeedPlanterOverlay seedPlanter;
     private final MissionPanel missions;
     private final GameHud hud;
     private final InventoryPanel inventory;
@@ -22,12 +25,25 @@ final class GameViewUpdater {
         this.hud=Objects.requireNonNull(hud);
         this.inventory=Objects.requireNonNull(inventory);
         this.progress=Objects.requireNonNull(progress);
+
+        // The planter is a scene illustration, but its clicks pass through to the
+        // scene's normal hotspot handler.
+        scene.setLayout(null);
+        seedPlanter=new SeedPlanterOverlay();
+        scene.add(seedPlanter);
+        scene.addComponentListener(new ComponentAdapter() {
+            @Override public void componentResized(ComponentEvent event) {
+                seedPlanter.setBounds(0,0,scene.getWidth(),scene.getHeight());
+            }
+        });
+        seedPlanter.setBounds(0,0,scene.getWidth(),scene.getHeight());
     }
 
     void refresh(GameState state, boolean spareSelected) {
         Objects.requireNonNull(state);
         scene.setEra(state.era());
         scene.setProgressHints(state);
+        seedPlanter.setSceneState(state.era(),state.flag("seed_planted"));
         scene.setPowered(state.powered());
         missions.refresh(state);
         hud.setLocation(state.era().title(), state.locationTitle().replaceFirst("^.*? · ", ""));
@@ -42,5 +58,4 @@ final class GameViewUpdater {
         if (state.era() == Era.PAST) return state.isWatchRepaired() ? "장치 복구 완료 · 미래 이동 가능" : "대체 부품으로 장치 수리 필요";
         return state.isCoreInstalled() ? "최종 좌표 입력 가능" : "미래 핵심 부품 확보 및 수리";
     }
-
 }

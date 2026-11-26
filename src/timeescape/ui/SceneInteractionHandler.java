@@ -25,6 +25,11 @@ final class SceneInteractionHandler {
         }
         if (id.equals("MEMO") && state.era()==Era.PRESENT) {
             if(!state.done("ACT_GET_CIPHER")){state.complete("ACT_GET_CIPHER");host.play("item_pickup");host.log("메모 해독표를 획득했습니다. PC에서 비밀번호를 입력하세요.");host.refresh();}
+            if (state.flag("seed_planted")) {
+                host.log("과거에 심은 식물이 현재까지 자랐습니다. 잎 색 순서는 파랑 · 노랑 · 빨강입니다. 보관함 암호에 이 순서를 사용하세요.");
+                host.refresh();
+                return;
+            }
             host.openMemo();return;
         }
         var item = state.catalog().items().get(id);

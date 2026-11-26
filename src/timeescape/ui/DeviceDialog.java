@@ -93,6 +93,7 @@ public final class DeviceDialog extends JDialog {
                 + "\n\n" + (state.canDepart() ? "사고 분석과 장치 수리 완료. 과거로 이동할 수 있습니다." : "사고 로그 분석 후 장치 수리를 마쳐야 과거로 이동할 수 있습니다.");
         }
         if (state.era() == Era.PAST && !state.isWatchRepaired()) {
+            if (state.flag("seed_planted")) return "씨앗을 과거 연구실 화분에 심었습니다.\n\n현재 연구실로 돌아가 자란 식물의 잎 배열을 확인할 수 있습니다. 장치의 임시 이동 회로를 사용합니다.";
             return "장치 상태: 심각하게 파손됨\n과거 좌표 이동: 완료\n\n과거 작업대의 황동 장치에서 대체 부품을 찾고, 인벤토리에서 부품을 선택한 뒤 이 장치를 다시 클릭하세요.";
         }
         if (state.era() == Era.PAST) {
@@ -108,6 +109,7 @@ public final class DeviceDialog extends JDialog {
     private String actionName() {
         if (state.introPresent()) return "사용";
         if (state.firstTravelComplete()) return "수리 필요";
+        if (state.era() == Era.PAST && !state.isWatchRepaired() && state.flag("seed_planted")) return "현재 연구실로 이동";
         if (state.era() == Era.PRESENT) return "과거로 시간 이동";
         if (state.era() == Era.PAST && !state.isWatchRepaired()) return "대체 부품 장착";
         if (state.era() == Era.PAST) return "미래로 시간 이동";
@@ -119,6 +121,8 @@ public final class DeviceDialog extends JDialog {
         if (state.introPresent()) return state.canDepart();
         if (state.firstTravelComplete()) return false;
         if (state.era() == Era.PRESENT) return state.canDepart();
+        if (state.era() == Era.PAST && !state.isWatchRepaired() && state.flag("seed_planted"))
+            return state.canEnter("present_1");
         if (state.era() == Era.PAST && !state.isWatchRepaired()) return state.available("ACT_REPAIR") && spareSelected;
         if (state.era() == Era.PAST) return state.canEnter("future_1");
         return state.hasCorePart() || state.isCoreInstalled();
@@ -126,6 +130,7 @@ public final class DeviceDialog extends JDialog {
 
     private void execute() {
         if (state.era() == Era.PRESENT) new TimeTravelController(state).travel();
+        else if (state.era() == Era.PAST && !state.isWatchRepaired() && state.flag("seed_planted")) state.enterRoom("present_1");
         else if (state.era() == Era.PAST && !state.isWatchRepaired()) state.repairWatch();
         else if (state.era() == Era.PAST) new TimeTravelController(state).travel();
         else if (!state.isCoreInstalled()) state.installCorePart();

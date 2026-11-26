@@ -57,7 +57,7 @@ final class ItemUseHandler {
                 boolean installedBefore = state.isCoreInstalled();
                 boolean escapedBefore = state.isEscaped();
                 host.openDevice(state, host.spareSelected(), () -> {
-                        if(!host.isCurrent(state))return;
+                    if(!host.isCurrent(state))return;
                     host.save();
                     host.selectSpare(false);
                     if (!escapedBefore && state.isEscaped()) {
@@ -71,6 +71,10 @@ final class ItemUseHandler {
                         host.play("time_travel");
                         host.audioEra(state.era());
                         host.log("과거 연구실로 이동했습니다. 작업대 위 황동 장치를 조사해 보세요.");
+                    } else if (beforeEra == Era.PAST && state.era() == Era.PRESENT) {
+                        host.play("time_travel");
+                        host.audioEra(state.era());
+                        host.log("현재 연구실로 돌아왔습니다. 연구 메모를 확인해 식물의 성장 흔적을 살펴보세요.");
                     } else if (!repairedBefore && state.isWatchRepaired()) {
                         host.play("device_repair");
                         host.log("손목 장치를 임시 수리했습니다. 장치를 다시 열어 미래로 이동하세요.");
@@ -84,4 +88,5 @@ final class ItemUseHandler {
             }
             default -> { }
         }
-    }}
+    }
+}

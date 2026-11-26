@@ -33,7 +33,7 @@ public final class VerifyProgression {
             data=new String(in.readAllBytes(),StandardCharsets.UTF_8);
         }
         ProgressCatalog original=parse(data);
-        check(original.steps().size()==21,"current tutorial and legacy states defined");
+        check(original.steps().size()==22,"current tutorial, seed puzzle and legacy states defined");
         for (boolean firstUsb : new boolean[]{true,false}) {
             GameState state=new GameState(original);
             check(state.roomId().equals("present_1"),"initial room");
@@ -48,8 +48,14 @@ public final class VerifyProgression {
             check(state.missionCompletedCount("M_USB")==4&&state.missionCompletedCount("M_DEVICE")==4,"UI counts");
             var snap=state.snapshot(); state.moveToPast();
             check(snap.roomId().equals("present_1"),"snapshot detached");
-            blocked(()->state.enterRoom("present_1")); // Existing direction remains unchanged.
-            state.collectSparePart(); state.repairWatch(); state.collectSparePart();
+            state.collectSparePart();
+            check(state.available("PZ012"),"seed puzzle becomes available after gear repair");
+            state.complete("PZ012");
+            check(state.flag("seed_planted"),"planting persists as a progress flag");
+            state.enterRoom("present_1");
+            check(state.roomId().equals("present_1"),"past can return to present to inspect growth");
+            state.enterRoom("past_1");
+            state.repairWatch(); state.collectSparePart();
             check(state.done("PZ002")&&!state.has("SPARE"),"reward cannot be farmed after consumption");
             state.moveToFuture(); state.collectCorePart(); state.installCorePart(); state.collectCorePart();
             check(!state.has("CORE"),"core cannot be farmed");
