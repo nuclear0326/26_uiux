@@ -16,7 +16,7 @@ final class ItemUseHandler {
                 if (!state.has(id)) return;
                 if (state.available("ACT_READ_ARCHIVE")) {
                     state.complete("ACT_READ_ARCHIVE");
-                    host.play("file_open");
+                    host.play("ui_open");
                     host.refresh();
                 }
                 host.log("연구 기록일지: ‘황동 부품 장치에서 분리한 대체 부품은 손목 시간여행 장치의 파손된 조정축에 사용한다. 부품을 장착해 장치를 수리할 것.’ 이제 대체 부품으로 장치를 수리할 수 있습니다.");
