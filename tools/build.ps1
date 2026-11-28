@@ -1,4 +1,4 @@
-param([string]$JavaHome = $env:JAVA_HOME, [ValidatePattern('^[0-9]+$')][string]$Version = '99', [string]$ArtifactsRoot = '')
+param([string]$JavaHome = $env:JAVA_HOME, [ValidatePattern('^[0-9]+$')][string]$Version = '118', [string]$ArtifactsRoot = '')
 $ErrorActionPreference = 'Stop'
 if (!$JavaHome) { throw 'Set JAVA_HOME to JDK 21 or newer.' }
 $root = Split-Path $PSScriptRoot -Parent

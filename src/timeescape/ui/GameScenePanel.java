@@ -103,6 +103,7 @@ public final class GameScenePanel extends JPanel {
     private Hotspot fadingZone;
     private float glow = 0f;
     private boolean revealHeld;
+    private boolean shiftHeld, middleHeld;
     private double particlePhase;
     private float revealContrast;
     private java.util.Map<String,timeescape.scene.InteractionHint> hints=java.util.Map.of();
@@ -145,7 +146,13 @@ public final class GameScenePanel extends JPanel {
     private final Timer hoverTimer;
     private final PropertyChangeListener windowFocusListener = e -> clearHighlights();
 
+    private void updateRevealHold(){
+        revealHeld=!inputBlocked && (shiftHeld || middleHeld);
+        hoverTimer.start();
+        repaint();
+    }
     private void clearHighlights() {
+        shiftHeld = middleHeld = false;
         revealHeld = false;
         revealContrast = 0f;
         hovered = null;
@@ -203,6 +210,14 @@ public final class GameScenePanel extends JPanel {
             }
         });
         MouseAdapter mouse = new MouseAdapter() {
+            @Override public void mousePressed(MouseEvent e){
+                if(inputBlocked || e.getButton()!=MouseEvent.BUTTON2)return;
+                middleHeld=true;updateRevealHold();
+            }
+            @Override public void mouseReleased(MouseEvent e){
+                if(e.getButton()!=MouseEvent.BUTTON2)return;
+                middleHeld=false;updateRevealHold();
+            }
             @Override public void mouseMoved(MouseEvent e) {
                 if(inputBlocked)return;
                 Hotspot next = hitTest(e.getPoint());
@@ -231,7 +246,7 @@ public final class GameScenePanel extends JPanel {
         };
         addMouseMotionListener(mouse);
         addMouseListener(mouse);
-        // Hold Shift to reveal objects; release or focus loss clears the hint.
+        // Hold Shift or the middle mouse button; release both to fade out.
         var keys = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         keys.put(KeyStroke.getKeyStroke("shift pressed SHIFT"), "revealObjects");
         keys.put(KeyStroke.getKeyStroke("pressed SHIFT"), "revealObjects");
@@ -240,16 +255,14 @@ public final class GameScenePanel extends JPanel {
         getActionMap().put("revealObjects", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 if(inputBlocked)return;
-                revealHeld = true;
-                hoverTimer.start();
-                repaint();
+                shiftHeld = true;
+                updateRevealHold();
             }
         });
         getActionMap().put("hideObjects", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                revealHeld = false;
-                hoverTimer.start();
-                repaint();
+                shiftHeld = false;
+                updateRevealHold();
             }
         });
     }
@@ -258,7 +271,8 @@ public final class GameScenePanel extends JPanel {
             this.era = next;
             syncWeather();
             if (next != Era.PRESENT) finishLighting();
-            revealHeld = false;
+            shiftHeld = middleHeld = false;
+        revealHeld = false;
             revealContrast = 0f;
             hovered = null;
             fadingZone = null;
@@ -314,6 +328,8 @@ public final class GameScenePanel extends JPanel {
             placed++;
         }
         light.dispose();
+        // Only the held/releasing reveal gains the approved extra reflection; ordinary hover is unchanged.
+        if(revealContrast>0)ObjectHighlightEffect.paint(g,hotspot,particlePhase*.04/.045,strength);
     }
 
     /** Draw labels in screen coordinates so text stays readable when the scene shrinks. */

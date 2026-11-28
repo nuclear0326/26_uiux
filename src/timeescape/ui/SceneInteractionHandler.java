@@ -29,6 +29,10 @@ final class SceneInteractionHandler {
         }
         var item = state.catalog().items().get(id);
         if (item != null && state.roomId().equals(item.room())) {
+            if(!state.canCollect(id)){
+                host.log("사고 로그 분석을 마친 뒤 수리에 필요한 부품을 확인하세요.");
+                return;
+            }
             state.collect(id);
             host.log("아이템을 확인했습니다. 연구 노트의 보유 아이템과 현재 목표를 확인하세요.");
             host.refresh();

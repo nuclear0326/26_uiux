@@ -58,12 +58,14 @@ final class ItemUseHandler {
                 boolean escapedBefore = state.isEscaped();
                 host.openDevice(state, host.spareSelected(), () -> {
                         if(!host.isCurrent(state))return;
-                    host.save();
                     host.selectSpare(false);
                     if (!escapedBefore && state.isEscaped()) {
                         host.play("ending");
                         host.log("최종 좌표 입력 성공! 붕괴하는 미래 연구실에서 탈출했습니다.");
+                        // Commit UI and autosave before the modal ending message.
+                        host.refresh();
                         host.showEnding();
+                        return;
                     } else if (!installedBefore && state.isCoreInstalled()) {
                         host.play("device_repair");
                         host.log("미래 핵심 부품을 장착했습니다. 장치를 다시 열어 최종 좌표를 입력하세요.");

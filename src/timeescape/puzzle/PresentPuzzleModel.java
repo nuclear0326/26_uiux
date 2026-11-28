@@ -1,6 +1,6 @@
 package timeescape.puzzle;
 import timeescape.puzzle.present.*;
-/** Compatibility facade for existing callers. Rules live only in the five concrete models. */
+/** Compatibility facade for existing callers. Rotary rules live in their concrete models; PZ008 uses SchematicPuzzle directly. */
 public final class PresentPuzzleModel {
  public final String id;private final PresentPuzzle delegate;
  public PresentPuzzleModel(String id){this.id=id;delegate=PresentPuzzles.create(id);}

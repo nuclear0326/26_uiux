@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 final class HelpContent extends JPanel {
     private static final String[][] ROWS = {
         {"마우스 클릭","배경의 오브젝트를 조사합니다."},
-        {"Shift 누르기","상호작용 가능한 위치를 표시합니다."},
+        {"Shift / 휠 버튼","누르는 동안 상호작용 가능한 위치를 표시합니다."},
         {"연구 노트","현재 목표와 보유 아이템을 확인합니다."},
         {"아이템 클릭","보관함의 아이템을 사용합니다."},
         {"Esc","메뉴를 열거나 열린 창을 닫습니다."}
@@ -34,7 +34,7 @@ final class HelpContent extends JPanel {
         Graphics2D g=(Graphics2D)raw.create();LabTheme.quality(g);
         Color bright=new Color(239,227,203),muted=new Color(188,184,173);
         boolean compact=getHeight()<360;
-        int row=compact?40:46,desc=getWidth()<400?112:128;
+        int row=compact?40:46,desc=getWidth()<400?142:158;
         for(int i=0;i<ROWS.length;i++){
             int y=22+i*row;g.setFont(GameFonts.button(17));g.setColor(bright);g.drawString(ROWS[i][0],0,y);
             g.setFont(GameFonts.body(compact?14:16));g.setColor(muted);

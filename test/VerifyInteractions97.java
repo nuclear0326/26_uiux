@@ -19,13 +19,13 @@ public final class VerifyInteractions97 {
   public void play(String s){events.add("sound:"+s);}public void audioEra(Era era){events.add("era:"+era);}
   public void openMemo(){memos++;events.add("memo");}public void closeNotebook(){events.add("closeNote");}
   public void startFailure(Runnable r){arrival=r;events.add("startFailure");}public void showFailureDialogue(){failures++;events.add("failureDialogue");}
-  public void showEnding(){endings++;events.add("ending");}
+  public void showEnding(){ok(!events.isEmpty()&&events.get(events.size()-1).equals("save"),"ending save requested before modal message");endings++;events.add("ending");}
   public void openDevice(GameState s,boolean selected,Runnable changed,Runnable intro){opens++;deviceState=s;deviceSelection=selected;this.changed=changed;this.intro=intro;}
   public PuzzleRunner.Outcome runPuzzle(String id){return runner.run(id);}
   void roundTrip()throws Exception{queue.barrier().get(5,TimeUnit.SECONDS);GameState loaded=new SaveSlots(path,ProgressCatalog.standard()).load(SaveSlots.Slot.AUTO).state();ok(loaded.snapshot().equals(current.snapshot()),"handler save snapshot roundtrip");current=loaded;}
   public void close(){queue.close();}
  }
- static void deviceChanged(Host h,ItemUseHandler items,Runnable action){items.use("DEVICE");ok(h.deviceState==h.current,"device receives current session");action.run();int n=h.saves;h.changed.run();ok(h.saves==n+2,"normal device preserves explicit save then refresh save");}
+ static void deviceChanged(Host h,ItemUseHandler items,Runnable action){items.use("DEVICE");ok(h.deviceState==h.current,"device receives current session");action.run();int n=h.saves;h.changed.run();ok(h.saves==n+1,"normal device requests exactly one save through refresh");}
  public static void main(String[] args)throws Exception{
   try(Host h=new Host()){
    SceneInteractionHandler scene=new SceneInteractionHandler(h);ItemUseHandler items=new ItemUseHandler(h);

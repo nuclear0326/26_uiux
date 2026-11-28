@@ -2,7 +2,6 @@ package timeescape.ui;
 
 import java.awt.Frame;
 import java.util.Map;
-import javax.swing.JOptionPane;
 import timeescape.puzzle.PuzzleResult;
 import timeescape.puzzle.PuzzleRunner.Launcher;
 
@@ -17,8 +16,7 @@ final class PuzzleDialogs {
             "wires", step -> RepairPuzzleDialog.play(owner, "현재 | 배전함 배선 복구", WiresPuzzlePanel::new),
             "temporary_power", step -> PresentPuzzleDialog.play(owner, "PZ004", "미래 / 전원 켜기 (임시)"),
             "rush_hour", step -> ComputerPuzzleDialog.play(owner),
-            "confirm", step -> PuzzleResult.from(JOptionPane.showConfirmDialog(owner,
-                "USB에 연구 데이터를 복사할까요?", "데이터 복사", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION),
+            "confirm", step -> UsbCopyDialog.play(owner),
             "action", step -> PuzzleResult.SOLVED
         );
     }

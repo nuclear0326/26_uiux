@@ -98,11 +98,18 @@ public final class GameState {
             }
         } while (changed);
     }
+    /** Pickup gate shared by clicks and hints. Old saves already repairing may continue. */
+    public boolean canCollect(String id) {
+        var item=catalog.items().get(id);
+        if(introPresent() || item==null || !roomId.equals(item.room()))return false;
+        boolean legacyRepair=Set.of("CASE","CELL","MODULE").contains(id) && done("PZ008");
+        return completed.containsAll(item.requires()) || legacyRepair;
+    }
     public void collect(String id) {
         if (introPresent()) throw new IllegalStateException(introGoal());
         ProgressCatalog.Item item = catalog.items().get(id);
         if (item == null) throw new IllegalArgumentException("Unknown item: " + id);
-        if (!roomId.equals(item.room()) || !completed.containsAll(item.requires()))
+        if (!canCollect(id))
             throw new IllegalStateException("이 장소에서 아직 획득할 수 없는 아이템입니다: " + id);
         if (!item.blockedBy().isBlank() && completed.contains(item.blockedBy())) return;
         acquire(id);

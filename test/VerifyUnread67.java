@@ -2,7 +2,7 @@ package timeescape.ui;
 import timeescape.core.*;import timeescape.system.*;import java.nio.file.*;import java.util.*;import java.util.concurrent.*;import java.util.concurrent.atomic.*;import javax.swing.*;import java.awt.event.*;
 public class VerifyUnread67 {
  static int checks;static void check(boolean b,String s){if(!b)throw new AssertionError(s);checks++;}
- static GameState initial(){GameState s=new GameState();s.complete("PZ004");s.collect("USB");s.collect("CASE");return s;}
+ static GameState initial(){GameState s=new GameState();s.complete("PZ004");s.collect("USB");var snap=s.snapshot();return GameState.restore(ProgressCatalog.standard(),new GameState.Snapshot(2,snap.roomId(),snap.completed(),Set.of("USB","CASE"),snap.flags(),snap.unlockedRooms(),Set.of("USB","CASE")));}
  public static void main(String[] args)throws Exception{
  if(args.length>0){var s=new SaveSlots(Path.of(args[0]),ProgressCatalog.standard()).load(SaveSlots.Slot.AUTO).state();check(!s.isItemUnread("USB")&&s.isItemUnread("CASE"),"separate process restore");System.out.println("PASS child read/unread restore");return;}
  Path dir=Files.createTempDirectory("timeescape-unread67-");SaveSlots slots=new SaveSlots(dir,ProgressCatalog.standard());GameState s=initial();var first=s.snapshot();check(first.unreadItems().equals(Set.of("USB","CASE")),"acquisition records both");s.collect("USB");check(s.snapshot().equals(first),"duplicate acquisition unchanged");

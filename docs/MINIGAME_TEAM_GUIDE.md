@@ -277,3 +277,15 @@ JDK 21과 JAVA_HOME 설정이 필요합니다. 저장소 루트 PowerShell에서
 - 실제 창/연출/오디오 연결: `InteractionHost`를 구현한 GameController와 화면 요청을 표시하는 GameFrame
 - 일반 퍼즐 추가는 기존처럼 game.properties와 PuzzleDialogs 등록을 우선 사용합니다. 별도 아이템 사용이 필요할 때만 ItemUseHandler에 추가합니다.
 - 지연 콜백은 `host.isCurrent(시작상태)`를 확인하고, 핸들러에 GameState를 장기 보관하지 않습니다.
+
+
+## v110 설계도 구현 참고
+PZ008은 이제 회전 모델 인터페이스 PresentPuzzle을 사용하지 않습니다. `SchematicPuzzle`은 조각 위치와 교환/완성 판정을 맡으며 `SchematicPuzzlePanel`은 공통 `RepairPuzzlePanel`을 확장합니다. `PresentPuzzleDialog.play`가 기존 present 종류의 PZ008을 공통 `RepairPuzzleDialog`로 연결하므로 진행 설정과 저장 ID는 바뀌지 않습니다. 드래그 화면에는 `PuzzleWorkspace`의 하단 안내/버튼과 `PuzzleChrome`의 공통 테두리를 사용합니다. 현재 적용 참고 예제는 `VerifySchematic110`이며 게임 창 없이 입력과 보상/저장 경로를 확인합니다.
+
+
+## v111 모듈 디자인 참고
+PZ010은 기존 ModuleAssemblyPuzzle 모델을 그대로 사용합니다. ModuleAssemblyPanel이 디자인/버튼 입력을 맡고 공통 RepairPuzzleDialog가 결과를 반환합니다. PresentPuzzleDialog.play는 기존 present 종류와 PZ010 ID를 유지한 채 새 패널로 연결합니다. 패널에서는 GameState나 저장 파일을 직접 수정하지 않습니다. VerifyModule111에서 규칙, 조작, 완료 후 부품 소비와 보상/저장을 확인합니다.
+
+
+## v112 시간 좌표 디자인 참고
+PZ011은 기존 TimeCoordinatesPuzzle 모델을 그대로 사용합니다. TimeCoordinatesPanel은 선택/연동 강조와 버튼 입력만 관리하고 완료 콜백을 한 번 호출합니다. PresentPuzzleDialog.play가 기존 present 종류와 PZ011 ID를 유지한 채 공통 RepairPuzzleDialog로 연결합니다. 과거 개방과 자동저장은 기존 진행 설정과 PuzzleRunner/GameSession에서 처리합니다. VerifyCoordinates112는 창 없이 연동 규칙, UI 입력과 저장 후 다음 이동을 확인합니다.

@@ -93,11 +93,10 @@ public final class GameFrame extends JFrame implements GameView {
         if(intro==null)new DeviceDialog(this,state,selected,changed).setVisible(true);
         else new DeviceDialog(this,state,selected,changed,intro).setVisible(true);
     }
-    @Override public void showEnding(){JOptionPane.showMessageDialog(this,
-        "TIME ESCAPE\n\n장치 복구와 최종 좌표 입력 완료!\n미래 연구실에서 탈출했습니다.\n\n(프로토타입 엔딩)","탈출 성공",JOptionPane.INFORMATION_MESSAGE);}
+    @Override public void showEnding(){EndingDialog.show(this);}
     @Override public void showSaveFailure(Path path){JOptionPane.showMessageDialog(this,
         "진행 상황을 저장하지 못했습니다.\n"+path+"\n저장 위치의 쓰기 권한과 남은 공간을 확인해주세요. 현재 게임은 계속 열려 있습니다.","저장 실패",JOptionPane.WARNING_MESSAGE);}
     @Override public void showPreparationFailure(){JOptionPane.showMessageDialog(this,"게임 리소스를 준비하지 못했습니다. 배포 파일을 확인해주세요.","준비 실패",JOptionPane.ERROR_MESSAGE);}
     @Override public void showBackupRecovered(){JOptionPane.showMessageDialog(this,"선택한 저장소의 이전 백업으로 복구했습니다.","저장 복구",JOptionPane.INFORMATION_MESSAGE);}
-    @Override public boolean confirmExit(){return JOptionPane.showConfirmDialog(this,"종료하시겠습니까?","게임 종료",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION;}
+    @Override public boolean confirmExit(){return ExitConfirmDialog.confirm(this);}
 }

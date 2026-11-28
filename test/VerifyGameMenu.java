@@ -3,7 +3,7 @@ import java.awt.*;import java.awt.event.*;import java.awt.image.*;import java.ni
 public class VerifyGameMenu {
  static int checks;static void check(boolean b,String m){if(!b)throw new AssertionError(m);checks++;}
  static void layout(Container c){c.doLayout();for(Component child:c.getComponents())if(child instanceof Container n)layout(n);}
- static JButton find(Container c,String name){for(Component child:c.getComponents()){if(child instanceof JButton b&&name.equals(b.getName()))return b;if(child instanceof Container n){JButton b=find(n,name);if(b!=null)return b;}}return null;}
+ static AbstractButton find(Container c,String name){for(Component child:c.getComponents()){if(child instanceof AbstractButton b&&name.equals(b.getName()))return b;if(child instanceof Container n){AbstractButton b=find(n,name);if(b!=null)return b;}}return null;}
  static void render(GameHud hud,int w,int h,String name)throws Exception{hud.setSize(w,h);for(int i=0;i<3;i++)layout(hud);BufferedImage im=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);Graphics2D g=im.createGraphics();g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);hud.printAll(g);g.dispose();ImageIO.write(im,"png",timeescape.testutil.ArtifactPaths.output("v54-menu/"+name+".png").toFile());}
  public static void main(String[]args)throws Exception{Files.createDirectories(timeescape.testutil.ArtifactPaths.output("v54-menu"));SwingUtilities.invokeAndWait(()->{try{
   GameFonts.installDefaults();GameState state=new GameState();state.complete("PZ004");int[] calls={0,0,0};boolean[] intro={true};GameScenePanel scene=new GameScenePanel(id->calls[2]++);scene.setEra(state.era());scene.setPowered(true);var finish=GameScenePanel.class.getDeclaredMethod("finishLighting");finish.setAccessible(true);finish.invoke(scene);
@@ -26,7 +26,7 @@ public class VerifyGameMenu {
 
   hud.openGameMenu();find(hud.gameMenu,"main").doClick();check(calls[0]==1&&!hud.gameMenu.isVisible(),"main menu callback");
   hud.openGameMenu();find(hud.gameMenu,"close").doClick();check(!hud.gameMenu.isVisible(),"X closes");hud.openGameMenu();hud.gameMenu.back();check(!hud.gameMenu.isVisible(),"Esc closes root");
-  for(int[] size:new int[][]{{1020,650},{1280,720},{1920,1080},{2560,1080}}){hud.openGameMenu();render(hud,size[0],size[1],"menu-"+size[0]);Rectangle r=hud.gameMenu.panel;check(r.x>=0&&r.y>=0&&r.x+r.width<=hud.layers.getWidth()&&r.y+r.height<=hud.layers.getHeight(),"within bounds");check(Math.abs(r.getCenterX()-hud.layers.getWidth()/2.)<1,"centered");for(String id:new String[]{"save","load","settings","main"}){JButton b=find(hud.gameMenu,id);check(b.getFontMetrics(b.getFont()).stringWidth(b.getText())<=b.getWidth(),"text fits");}hud.closeGameMenu();}
+  for(int[] size:new int[][]{{1020,650},{1280,720},{1920,1080},{2560,1080}}){hud.openGameMenu();render(hud,size[0],size[1],"menu-"+size[0]);Rectangle r=hud.gameMenu.panel;check(r.x>=0&&r.y>=0&&r.x+r.width<=hud.layers.getWidth()&&r.y+r.height<=hud.layers.getHeight(),"within bounds");check(Math.abs(r.getCenterX()-hud.layers.getWidth()/2.)<1,"centered");for(String id:new String[]{"save","load","settings","main"}){AbstractButton b=find(hud.gameMenu,id);check(b.getFontMetrics(b.getFont()).stringWidth(b.getText())<=b.getWidth(),"text fits");}hud.closeGameMenu();}
   System.out.println("PASS "+checks+" game-menu controls/load/settings/input/layout checks; no game main, JFrame, audio or EXE launched.");
  }catch(Exception e){throw new RuntimeException(e);}});}
 }

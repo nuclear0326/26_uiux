@@ -17,7 +17,7 @@ public enum InteractionHint {
         var item=state.catalog().items().get(object);
         if(item!=null && item.room().equals(state.roomId())) {
             if(state.has(object) || (!item.blockedBy().isBlank() && state.done(item.blockedBy()))) return NONE;
-            return powered && item.requires().stream().allMatch(state::done) ? READY : LATER;
+            return powered && state.canCollect(object) ? READY : LATER;
         }
         var next=state.nextObjectStep(object);
         if(next.isEmpty()) return NONE;

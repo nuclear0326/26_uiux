@@ -37,7 +37,7 @@ public class VerifyMissions {
         early.complete("ACT_GET_CIPHER");early.complete("PZ006");early.completeDiagnosis();check(!early.canDepart(),"Rush Hour alone blocked");early.complete("PZ007");early.complete("PZ010");early.complete("PZ011");
         early.collect("CASE");check(!early.has("CASE"),"no duplicate installed parts");early.complete("PZ011");check(early.canDepart(),"idempotent completion");
         solve("PZ004",0,0,1,0,1);
-        solve("PZ006",7,1,3,5);solve("PZ008",3,2,0,3);solve("PZ010",3,3,2);solve("PZ011",2,0,1);
+        solve("PZ006",7,1,3,5);var schematic=new timeescape.puzzle.present.SchematicPuzzle();for(int piece=0;piece<9;piece++)for(int cell=0;cell<18;cell++)if(schematic.pieceAt(cell)==piece){schematic.move(cell,piece);break;}check(schematic.solved(),"PZ008 drag assembly");solve("PZ010",3,3,2);solve("PZ011",2,0,1);
         javax.swing.SwingUtilities.invokeAndWait(()->{
             try {
                 GameState[] states={new GameState(),early};
