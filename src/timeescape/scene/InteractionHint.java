@@ -13,6 +13,8 @@ public enum InteractionHint {
             if (object.equals("POWER")) return NONE;
             return NONE;
         }
+        // The past research memo is an optional clue, not a progression step; keep it discoverable.
+        if (state.era() == Era.PAST && object.equals("PAST_MEMO")) return READY;
         boolean powered = state.era()!=Era.PRESENT || state.powered() || object.equals("POWER");
         var item=state.catalog().items().get(object);
         if(item!=null && item.room().equals(state.roomId())) {
