@@ -11,13 +11,17 @@ public final class VerifyEnding117 {
  static int checks;
  static void ok(boolean b,String message){if(!b)throw new AssertionError(message);checks++;}
  static void close(EndingPanel p,int mode){switch(mode){case 0->p.confirm.doClick(0);case 1->p.dismiss.doClick(0);case 2->p.getActionMap().get("close").actionPerformed(null);case 3->p.confirm.getActionMap().get("activate").actionPerformed(null);default->p.cancelSession();}}
+ static GameState repairedFuture(){
+  GameState s=VerifyDevice114.ready();s.moveToPast();s.collectSparePart();s.complete("PZ022");
+  s.complete("ACT_READ_ARCHIVE");s.repairWatch();s.moveToFuture();s.collectCorePart();s.installCorePart();return s;
+ }
  public static void main(String[] args)throws Exception{
   ok(GraphicsEnvironment.isHeadless(),"no game windows");
   BufferedImage blank=new BufferedImage(900,650,BufferedImage.TYPE_INT_RGB);
   for(int mode=0;mode<5;mode++){
    final int selected=mode;
    try(var h=new VerifyInteractions97.Host()){
-    h.current=VerifyDevice114.ready();h.current.moveToPast();h.current.collectSparePart();h.current.repairWatch();h.current.moveToFuture();h.current.collectCorePart();h.current.installCorePart();
+    h.current=repairedFuture();
     int[] closed={0};
     InteractionHost proxy=(InteractionHost)Proxy.newProxyInstance(InteractionHost.class.getClassLoader(),new Class<?>[]{InteractionHost.class},(object,method,params)->{
      if(method.getName().equals("showEnding")){
@@ -38,8 +42,7 @@ public final class VerifyEnding117 {
   }
   Path out=timeescape.testutil.ArtifactPaths.output("v117-preview");Files.createDirectories(out);
   SwingUtilities.invokeAndWait(()->{try{
-   GameFonts.installDefaults();GameState s=VerifyDevice114.ready();s.moveToPast();s.collectSparePart();s.repairWatch();s.moveToFuture();s.collectCorePart();s.installCorePart();s.escape();
-   var snapshot=s.snapshot();
+   GameFonts.installDefaults();GameState s=repairedFuture();s.escape();var snapshot=s.snapshot();
    for(int[] size:new int[][]{{1440,875},{900,650},{600,500}}){
     EndingPanel p=new EndingPanel(VerifyDevice114.room(s,size[0],size[1],false),65,()->{throw new AssertionError("render must not close");});p.setSize(size[0],size[1]);p.doLayout();
     ok(p.textFits()&&p.panel.contains(p.confirm.getBounds())&&p.panel.contains(p.dismiss.getBounds()),"text and controls fit");
