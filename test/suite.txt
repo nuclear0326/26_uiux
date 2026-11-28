@@ -12,6 +12,7 @@ VerifyPresentModels
 VerifyMaze
 VerifyRepairs
 VerifyProgression
+VerifyBookshelfPuzzle
 VerifySaveStore
 VerifySaveSlots
 VerifySaveQueue

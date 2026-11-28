@@ -14,6 +14,7 @@ final class PuzzleDialogs {
             "present", step -> PresentPuzzleDialog.play(owner, step.id()),
             "gears", step -> RepairPuzzleDialog.play(owner, "과거 | 시계태엽 고치기", GearsPuzzlePanel::new),
             "wires", step -> RepairPuzzleDialog.play(owner, "현재 | 배전함 배선 복구", WiresPuzzlePanel::new),
+            "bookshelf", step -> RepairPuzzleDialog.play(owner, "과거 | 책장 속 연구 기록", BookshelfPuzzlePanel::new),
             "temporary_power", step -> PresentPuzzleDialog.play(owner, "PZ004", "미래 / 전원 켜기 (임시)"),
             "rush_hour", step -> ComputerPuzzleDialog.play(owner),
             "confirm", step -> UsbCopyDialog.play(owner),

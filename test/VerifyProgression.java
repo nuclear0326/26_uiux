@@ -33,7 +33,7 @@ public final class VerifyProgression {
             data=new String(in.readAllBytes(),StandardCharsets.UTF_8);
         }
         ProgressCatalog original=parse(data);
-        check(original.steps().size()==21,"current tutorial and legacy states defined");
+        check(original.steps().size()==22,"current tutorial, legacy states, and bookshelf puzzle defined");
         for (boolean firstUsb : new boolean[]{true,false}) {
             GameState state=new GameState(original);
             check(state.roomId().equals("present_1"),"initial room");
@@ -49,6 +49,8 @@ public final class VerifyProgression {
             var snap=state.snapshot(); state.moveToPast();
             check(snap.roomId().equals("present_1"),"snapshot detached");
             blocked(()->state.enterRoom("present_1")); // Existing direction remains unchanged.
+            check(state.available("PZ022"),"optional bookshelf puzzle opens with the past room");
+            state.complete("PZ022");check(state.flag("archive_record_found"),"book record reward is saved as a progress flag");
             state.collectSparePart(); state.repairWatch(); state.collectSparePart();
             check(state.done("PZ002")&&!state.has("SPARE"),"reward cannot be farmed after consumption");
             state.moveToFuture(); state.collectCorePart(); state.installCorePart(); state.collectCorePart();
