@@ -13,6 +13,7 @@ final class PuzzleDialogs {
             "log_analysis", step -> RepairPuzzleDialog.play(owner, "사고 로그 분석", AccidentLogPanel::new),
             "present", step -> PresentPuzzleDialog.play(owner, step.id()),
             "gears", step -> RepairPuzzleDialog.play(owner, "과거 | 시계태엽 고치기", GearsPuzzlePanel::new),
+            "clock_focus", step -> RepairPuzzleDialog.play(owner, "현재 | 과거·현재 시계 맞추기", ClockFocusPanel::new),
             "wires", step -> RepairPuzzleDialog.play(owner, "현재 | 배전함 배선 복구", WiresPuzzlePanel::new),
             "bookshelf", step -> RepairPuzzleDialog.play(owner, "과거 | 책장 속 연구 기록", BookshelfPuzzlePanel::new),
             "temporary_power", step -> PresentPuzzleDialog.play(owner, "PZ004", "미래 / 전원 켜기 (임시)"),
