@@ -1,19 +1,24 @@
 package timeescape.ui;
 import timeescape.core.*;import timeescape.model.Era;import timeescape.puzzle.PuzzleRunner;
+import java.util.ArrayList;import java.util.List;
 
 /** Headless inventory interaction regression for the spare-part mystery and journal unlock. */
 public final class VerifyInteractions97 {
  static int checks;static void ok(boolean b,String m){if(!b)throw new AssertionError(m);checks++;}
- static final class Host implements InteractionHost {
-  final GameState current;boolean selected;String last="";int refreshes,saves;
+ static final class Host implements InteractionHost,AutoCloseable {
+  GameState current;boolean selected;String last="";int refreshes,saves,opens,endings;final List<String> events=new ArrayList<>();
+  GameState deviceState;boolean deviceSelection;Runnable changed=this::refresh,intro=()->{},arrival;boolean closing,travelling;
+  Host(){this(GameState.newGame());}
   Host(GameState state){current=state;}
-  public GameState state(){return current;}public boolean blocked(){return false;}public boolean isCurrent(GameState s){return s==current;}
+  public GameState state(){return current;}public boolean blocked(){return closing||travelling;}public boolean isCurrent(GameState s){return s==current;}
   public boolean spareSelected(){return selected;}public void selectSpare(boolean b){selected=b;}
-  public void log(String s){last=s;}public void refresh(){refreshes++;save();}public void save(){saves++;}
-  public void play(String s){}public void audioEra(Era era){}public void openMemo(){}public void closeNotebook(){}
-  public void startFailure(Runnable r){}public void showFailureDialogue(){}public void showEnding(){}
-  public void openDevice(GameState s,boolean selected,Runnable changed,Runnable intro){}
+  public void log(String s){last=s;events.add("log:"+s);}public void refresh(){refreshes++;events.add("refresh");save();}public void save(){saves++;events.add("save");}
+  public void play(String s){events.add("sound:"+s);}public void audioEra(Era era){events.add("era:"+era);}public void openMemo(){events.add("memo");}public void closeNotebook(){events.add("closeNote");}
+  public void startFailure(Runnable r){arrival=r;}public void showFailureDialogue(){events.add("failureDialogue");}public void showEnding(){endings++;events.add("ending");}
+  public void openDevice(GameState s,boolean selected,Runnable changed,Runnable intro){opens++;deviceState=s;deviceSelection=selected;this.changed=changed;this.intro=intro;}
   public PuzzleRunner.Outcome runPuzzle(String id){return PuzzleRunner.Outcome.IGNORED;}
+  void roundTrip(){events.add("roundTrip");}
+  public void close(){}
  }
  static GameState readyForPast(){
   GameState s=GameState.newGame();s.takePrototype();s.usePrototype();s.complete("PZ004");
