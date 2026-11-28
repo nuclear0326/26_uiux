@@ -117,6 +117,7 @@ final class GameController implements InteractionHost, MainMenuPanel.MenuActions
                 case "PZ007" -> session.state().prototypeFailed()?"사고 로그를 USB에 확보했습니다. USB를 사용해 사고 기록을 분석하세요.":"USB 확보 미션 완료. USB는 미래까지 보관됩니다.";
                 case "PZ021" -> "좌표 보정 불일치가 최초 원인입니다. 분석 보고서를 획득했습니다. 작업대에서 장치 수리를 시작하세요.";
                 case "PZ002" -> "과거 작업대에서 '대체 부품'을 획득했습니다. 인벤토리에서 부품을 선택하고 손목 장치를 여세요.";
+                case "PZ022" -> "연구 기록서 정리 완료! ‘연구 기록일지’를 획득했습니다. 인벤토리에서 기록일지를 클릭해 읽어 보세요.";
                 case "PZ003" -> "중앙 시간 장치에서 '미래 핵심 부품'을 확보했습니다. 인벤토리의 손목 장치에 장착하세요.";
                 default -> step.mission().isBlank() ? step.name() + " 완료" : session.state().missionNext(step.mission());
             });
