@@ -11,14 +11,10 @@ public final class HotspotCatalog {
     private static final List<Hotspot> PAST = List.of(
         new Hotspot("PAST_SPARE", "황동 부품 장치",
             polygon(1088,714, 1127,696, 1238,713, 1236,844, 1211,871, 1086,849)),
-        // Spine labels are hover affordances; every spine and the full circled shelf area opens one puzzle.
-        new Hotspot("PAST_BOOKSHELF", "⚙ 장치 도면", new java.awt.Rectangle(708,270,38,164)),
-        new Hotspot("PAST_BOOKSHELF", "☆ 관측 기록", new java.awt.Rectangle(746,266,38,168)),
-        new Hotspot("PAST_BOOKSHELF", "⌛ 시간 실험", new java.awt.Rectangle(784,263,38,170)),
-        new Hotspot("PAST_BOOKSHELF", "△ 사고 보고서", new java.awt.Rectangle(822,267,38,166)),
-        new Hotspot("PAST_BOOKSHELF", "❧ 식물 도감", new java.awt.Rectangle(860,273,40,160)),
-        new Hotspot("PAST_BOOKSHELF", "서가 속 연구 기록", new java.awt.Rectangle(690,205,235,240)),
-        new Hotspot("PAST_MEMO", "책상 위 연구 메모", new java.awt.Rectangle(870,730,205,145))
+        // One precise multi-book region keeps Shift glints and hover text on the actual shelf books.
+        new Hotspot("PAST_BOOKSHELF", "연구 기록서 정리", new java.awt.Rectangle(685,225,285,210)),
+        // The circled book on the right side of the desk opens the research memo.
+        new Hotspot("PAST_MEMO", "책상 위 연구 메모", new java.awt.Rectangle(1390,865,310,210))
     );
     private static final List<Hotspot> PRESENT = List.of(new Hotspot("PRESENT_PC", "진단 컴퓨터",
         polygon(873,489, 999,487, 1007,500, 1006,581, 995,591, 878,589, 872,580)),
