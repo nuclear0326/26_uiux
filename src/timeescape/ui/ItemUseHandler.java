@@ -22,6 +22,10 @@ final class ItemUseHandler {
                 host.log("연구 기록일지: ‘황동 부품 장치에서 분리한 대체 부품은 손목 시간여행 장치의 파손된 조정축에 사용한다. 부품을 장착해 장치를 수리할 것.’ 이제 대체 부품으로 장치를 수리할 수 있습니다.");
             }
             case "SPARE" -> {
+                if (!state.done("ACT_READ_ARCHIVE")) {
+                    host.log("용도를 아직 알 수 없는 부품입니다. 연구실의 기록을 더 찾아보세요.");
+                    return;
+                }
                 host.selectSpare(!host.spareSelected());
                 host.play("file_select");
                 host.log(host.spareSelected() ? "대체 부품 선택됨. 손목 시간여행 장치를 클릭하면 수리할 수 있습니다." : "대체 부품 선택을 해제했습니다.");
